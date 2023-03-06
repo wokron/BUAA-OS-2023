@@ -1,0 +1,37 @@
+The files in this directory describe the devices found in GXemul's "test
+machines". These machines do not match any real-world machines, but they
+have devices that are similar to those found in real machines:
+
+  o)  console (dev_cons):
+	A simple console device, with putchar() and getchar()
+	functionality. It also has a halt() function, to make it easy
+	to exit from the emulator.
+
+  o)  disk (dev_disk):
+	Used for reading and writing 512-byte sectors from/to disk images.
+
+  o)  ethernet (dev_ether):
+	A very simple ethernet NIC, capable of sending and receiving
+	ethernet frames on the simulated network.
+
+  o)  framebuffer (dev_fb):
+	Defaults to 640 x 480 pixels, 3 bytes per pixel, red-green-blue.
+
+  o)  interrupt controller (dev_irqc):
+	A generic interrupt controller. (Only for non-MIPS test machines.)
+
+  o)  mp (dev_mp):
+	A multiprocessor inter-processor communication device.
+	It also contains other useful functionality, such as retrieving
+	the amount of "physical" RAM installed in the emulated machine.
+
+  o)  rtc (dev_rtc):
+	A Real-Time Clock device. Used to retrieve the current time, and
+	to cause periodic interrupts at a specific frequency.
+
+These include files are not released under the same license as GXemul
+itself. The include files are released as public domain, so they can be
+reused also in projects that have BSD-incompatible licenses.
+
+Please read the GXemul documentation for more details on how to use the
+testmachine devices, and study the demo programs.

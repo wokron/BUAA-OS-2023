@@ -1,0 +1,17 @@
+.vscode
+.idea
+*.b
+*.b.c
+*.o
+*.objdump
+*.x
+*.swp
+*~
+tags
+
+target
+include/generated
+
+__pycache__
+*.pyc
+*.pyo
