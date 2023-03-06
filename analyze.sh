@@ -12,7 +12,8 @@ else
     ;;
     "--find")
         # Your code here. (3/4)
-	for file in `find . -type f`
+	rm -f $3.txt
+	for file in `find ./ -type f`
 	do
 		#result=`expr $file == $3`	
 		#if [ $((result)) -eq 1 ]
