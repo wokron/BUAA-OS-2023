@@ -12,13 +12,13 @@ else
     ;;
     "--find")
         # Your code here. (3/4)
-	for file in `find . -maxdepth 1 -type f`
+	for file in `find . -type f`
 	do
-		result=`expr $file == $3`	
-		if [ $((result)) -eq 1 ]
-		then
-			continue
-		fi
+		#result=`expr $file == $3`	
+		#if [ $((result)) -eq 1 ]
+		#then
+		#	continue
+		#fi
 		grep $3 $file >>$3.txt	
 	done
     ;;
