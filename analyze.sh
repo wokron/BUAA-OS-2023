@@ -13,9 +13,8 @@ else
     "--find")
     	>$3.txt
         # Your code here. (3/4)
-	for file in `find . -maxdepth 1`
+	for file in `find . -maxdepth 1 -type f`
 	do
-		echo $file
 		grep $3 $file >>$3.txt	
 	done
     ;;
