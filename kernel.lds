@@ -13,6 +13,10 @@ SECTIONS {
 
 	/* fill in the correct address of the key sections: text, data, bss. */
 	/* Exercise 1.2: Your code here. */
+	. = 0x80010000
+	.text : { *(.text) }
+	.data : { *(.data) }
+	.bss : { *(.bss) }
 
 	bss_end = .;
 	. = 0x80400000;
