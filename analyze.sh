@@ -11,10 +11,14 @@ else
 	tail $1 -n 5
     ;;
     "--find")
-    	>$3.txt
         # Your code here. (3/4)
 	for file in `find . -maxdepth 1 -type f`
 	do
+		result=`expr $file == $3`	
+		if [ $((result)) -eq 1 ]
+		then
+			continue
+		fi
 		grep $3 $file >>$3.txt	
 	done
     ;;
