@@ -19,8 +19,8 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 	for (;;) {
 		/* scan for the next '%' */
 		/* Exercise 1.4: Your code here. (1/8) */
-		const char * p = fmt;
-		while (*p != '%' || *p != '\0') {
+		char * p = fmt;
+		while (*p != '%' && *p != '\0') {
 			p++;
 		}
 
@@ -54,7 +54,7 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 		/* get width */
 		/* Exercise 1.4: Your code here. (6/8) */
 		width = 0;
-		while ('0' <= *fmt && *fmt <= '9') {
+		while ('0' <= *fmt && *fmt <= '9' && *fmt != '\0') {
 			width *= 10;
 			width += *fmt - '0';
 			fmt++;
@@ -63,7 +63,7 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 		/* check for long */
 		/* Exercise 1.4: Your code here. (7/8) */
 		long_flag = 0;
-		if (*fmt == 'l' || *fmt == 'L') {
+		if (*fmt == 'l') {
 			long_flag = 1;
 			fmt++;
 		}
