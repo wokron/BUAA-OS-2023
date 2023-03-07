@@ -27,7 +27,7 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 		/* flush the string found so far */
 		/* Exercise 1.4: Your code here. (2/8) */
 		out(data, fmt, p - fmt);
-		fmt = p
+		fmt = p;
 
 		/* check "are we hitting the end?" */
 		/* Exercise 1.4: Your code here. (3/8) */
@@ -62,7 +62,7 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 
 		/* check for long */
 		/* Exercise 1.4: Your code here. (7/8) */
-		long_flag = 0
+		long_flag = 0;
 		if (*fmt == 'l' || *fmt == 'L') {
 			long_flag = 1;
 			fmt++;
