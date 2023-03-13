@@ -100,7 +100,6 @@ void page_init(void) {
 	/* Step 3: Mark all memory below `freemem` as used (set `pp_ref` to 1) */
 	/* Exercise 2.3: Your code here. (3/4) */
 	u_long maxpage = (freemem - KSTACKTOP) / BY2PG;
-	printk("debug: maxpage: %lu, npage: %lu\n", maxpage, npage);
 	for (u_long i = 0; i < maxpage; i++) {
 		pages[i].pp_ref = 1;
 	}
