@@ -139,7 +139,7 @@ int page_alloc(struct Page **new) {
 	/* Step 2: Initialize this page with zero.
 	 * Hint: use `memset`. */
 	/* Exercise 2.4: Your code here. (2/2) */
-	memset(page2kva(pp), 0, BY2PG);
+	memset((void *)page2kva(pp), 0, BY2PG);
 
 	*new = pp;
 	return 0;
@@ -180,16 +180,26 @@ static int pgdir_walk(Pde *pgdir, u_long va, int create, Pte **ppte) {
 
 	/* Step 1: Get the corresponding page directory entry. */
 	/* Exercise 2.6: Your code here. (1/3) */
+	pgdir_entryp = pgdir + PDX(va);
 
 	/* Step 2: If the corresponding page table is not existent (valid) and parameter `create`
 	 * is set, create one. Set the permission bits 'PTE_D | PTE_V' for this new page in the
 	 * page directory.
 	 * If failed to allocate a new page (out of memory), return the error. */
 	/* Exercise 2.6: Your code here. (2/3) */
+	if (!(*pgdir_entryp & PTE_V) && create) {
+		if (page_alloc(&pp) != 0) {
+			*ppte = NULL;
+			return -E_NO_MEM;
+		}
+		pp->pp_ref++;
+		*pgdir_entryp = page2pa(pp) | PTE_D | PTE_V;
+	}
 
 	/* Step 3: Assign the kernel virtual address of the page table entry to '*ppte'. */
 	/* Exercise 2.6: Your code here. (3/3) */
-
+	// *ppte = (Pte *)page2kva(pp);
+	*ppte = KADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
 	return 0;
 }
 
@@ -223,14 +233,20 @@ int page_insert(Pde *pgdir, u_int asid, struct Page *pp, u_long va, u_int perm) 
 
 	/* Step 2: Flush TLB with 'tlb_invalidate'. */
 	/* Exercise 2.7: Your code here. (1/3) */
+	tlb_invalidate(asid, va);
 
 	/* Step 3: Re-get or create the page table entry. */
 	/* If failed to create, return the error. */
 	/* Exercise 2.7: Your code here. (2/3) */
+	if (pgdir_walk(pgdir, va, 1, &pte) != 0) {
+		return -E_NO_MEM;
+	}
 
 	/* Step 4: Insert the page to the page table entry with 'perm | PTE_V' and increase its
 	 * 'pp_ref'. */
 	/* Exercise 2.7: Your code here. (3/3) */
+	*pte = page2pa(pp) | perm | PTE_V;
+	pp->pp_ref++;
 
 	return 0;
 }
