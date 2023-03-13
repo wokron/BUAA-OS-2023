@@ -114,6 +114,13 @@
  */
 #define LIST_INSERT_AFTER(listelm, elm, field)                                                     \
 	/* Exercise 2.2: Your code here. */  \
+	do { \
+		LIST_NEXT((elm), field) = LIST_NEXT((listelm), field); \
+		if (LIST_NEXT((listelm), field) != NULL) \
+			LIST_NEXT((listelm), field)->field.le_prev = &elm; \
+		LIST_NEXT((listelm), field) = (elm); \
+		*(elm)->field.le_prev = listelm; \
+	} while (0)
 
 /*
  * Insert the element "elm" *before* the element "listelm" which is
