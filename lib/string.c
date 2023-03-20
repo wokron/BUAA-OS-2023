@@ -113,4 +113,5 @@ int sprintf(char *buf, const char *fmt, ...) {
 	str_idx = 0;
 	vprintfmt(stroutputk, buf, fmt, ap);
 	va_end(ap);
+	return strlen(buf);
 }
