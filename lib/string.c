@@ -1,4 +1,5 @@
 #include <types.h>
+#include <print.h>
 
 void *memcpy(void *dst, const void *src, size_t n) {
 	void *dstaddr = dst;
@@ -94,4 +95,22 @@ int strcmp(const char *p, const char *q) {
 	}
 
 	return 0;
+}
+
+// for lab1 extra
+static int str_idx = 0;
+void stroutputk(void *data, const char *buf, size_t len) {
+	char *str = (char *)data;
+	for (int i = 0; i < len; str_idx++, i++) {
+		str[str_idx] = buf[i];
+	}
+	str[str_idx] = '\0';
+}		
+
+int sprintf(char *buf, const char *fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	str_idx = 0;
+	vprintfmt(stroutputk, buf, fmt, ap);
+	va_end(ap);
 }
