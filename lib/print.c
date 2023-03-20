@@ -90,7 +90,8 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 			print_num(out, data, num1, 10, neg_flag, width, ladjust, padc, 0);
 
 			out(data, ",", 1);
-
+			
+			neg_flag = 0;
 			if (num2 < 0) {
 				neg_flag = 1;
 				num2 = -num2;
