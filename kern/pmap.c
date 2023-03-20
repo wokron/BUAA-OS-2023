@@ -188,14 +188,20 @@ static int pgdir_walk(Pde *pgdir, u_long va, int create, Pte **ppte) {
 	 * page directory.
 	 * If failed to allocate a new page (out of memory), return the error. */
 	/* Exercise 2.6: Your code here. (2/3) */
-	if (!(*pgdir_entryp & PTE_V) && create) {
-		if (page_alloc(&pp) != 0) {
+	*ppte = NULL;
+	if (!(*pgdir_entryp & PTE_V)) {
+		if (create) {
+			if (page_alloc(&pp) != 0) {
+				*ppte = NULL;
+				return -E_NO_MEM;
+			}
+			pp->pp_ref++;
+			*pgdir_entryp = page2pa(pp) | PTE_D | PTE_V;
+		} else {
 			*ppte = NULL;
-			return -E_NO_MEM;
+			return 0;
 		}
-		pp->pp_ref++;
 
-		*pgdir_entryp = page2pa(pp) | PTE_D | PTE_V;
 	}
 
 	/* Step 3: Assign the kernel virtual address of the page table entry to '*ppte'. */
