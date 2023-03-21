@@ -203,8 +203,8 @@ static int pgdir_walk(Pde *pgdir, u_long va, int create, Pte **ppte) {
 
 	/* Step 3: Assign the kernel virtual address of the page table entry to '*ppte'. */
 	/* Exercise 2.6: Your code here. (3/3) */
-	Pte *pgtable_entryp = (Pte *)KADDR(PTE_ADDR(*pgdir_entryp));
-	*ppte = pgtable_entryp + PTX(va);
+	Pte *pgtable = (Pte *)KADDR(PTE_ADDR(*pgdir_entryp));
+	*ppte = pgtable + PTX(va);
 	
 	return 0;
 }
