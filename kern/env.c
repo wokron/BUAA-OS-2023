@@ -158,6 +158,7 @@ void env_init(void) {
 	/* Exercise 3.1: Your code here. (2/2) */
 	for (i = NENV - 1; i >= 0; i--) {
 		LIST_INSERT_HEAD(&env_free_list, envs + i, env_link);
+		envs[i].env_status = ENV_FREE;
 	}
 
 	/*
@@ -242,8 +243,8 @@ int env_alloc(struct Env **new, u_int parent_id) {
 
 	/* Step 2: Call a 'env_setup_vm' to initialize the user address space for this new Env. */
 	/* Exercise 3.4: Your code here. (2/4) */
-	if (env_setup_vm(e) != 0) {
-		return -E_NO_MEM;
+	if ((r = env_setup_vm(e)) != 0) {
+		return r;
 	}
 
 	/* Step 3: Initialize these fields for the new Env with appropriate values:
@@ -259,8 +260,8 @@ int env_alloc(struct Env **new, u_int parent_id) {
 	/* Exercise 3.4: Your code here. (3/4) */
 	e->env_id = mkenvid(e);
 	e->env_parent_id = parent_id;
-	if (asid_alloc(&e->env_asid) != 0) {
-		return -E_NO_FREE_ENV;
+	if ((r = asid_alloc(&e->env_asid)) != 0) {
+		return r;
 	}
 
 	/* Step 4: Initialize the sp and 'cp0_status' in 'e->env_tf'. */
@@ -297,8 +298,8 @@ static int load_icode_mapper(void *data, u_long va, size_t offset, u_int perm, c
 
 	/* Step 1: Allocate a page with 'page_alloc'. */
 	/* Exercise 3.5: Your code here. (1/2) */
-	if (page_alloc(&p) != 0) {
-		return -1;
+	if ((r = page_alloc(&p)) != 0) {
+		return r;
 	}
 
 	/* Step 2: If 'src' is not NULL, copy the 'len' bytes started at 'src' into 'offset' at this

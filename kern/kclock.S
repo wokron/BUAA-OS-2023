@@ -17,6 +17,12 @@ LEAF(kclock_init)
 	 * Reference: http://gavare.se/gxemul/gxemul-stable/doc/experiments.html#expdevices
 	 */
 	/* Exercise 3.11: Your code here. */
+	la	t1, KSEG1
+	la	t2, DEV_RTC_ADDRESS
+	la	t3, DEV_RTC_HZ
+	or	t1, t1, t2
+	or	t1, t1, t3
+	sw	t0, 0(t1)
 
 	jr      ra
 END(kclock_init)
