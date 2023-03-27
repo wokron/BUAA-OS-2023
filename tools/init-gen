@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+for s in "$@"; do
+	name="$(echo "$s/" | cut -f1 -d/)"
+	pri="$(echo "$s/" | cut -f2 -d/)"
+	if [ -z "$name" ]; then
+		out="$out ENV_CREATE($pri);"
+	elif [ -z "$pri" ]; then
+		out="$out ENV_CREATE(test_$name);"
+	else
+		out="$out ENV_CREATE_PRIORITY(test_$name, $pri);"
+	fi
+done
+
+# shellcheck disable=2028
+echo 'void mips_init() {
+	printk("init.c:\tmips_init() is called\n");
+
+	mips_detect_memory();
+	mips_vm_init();
+	page_init();
+	env_init();
+
+'"$out"'
+
+	kclock_init();
+	enable_irq();
+	while (1) {
+	}
+	panic("init.c:\tend of mips_init() reached!");
+}' > include/generated/init_override.h
