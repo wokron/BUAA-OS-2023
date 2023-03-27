@@ -38,7 +38,7 @@ void schedule(int yield) {
 	count--;
 	if (yield || count <= 0 || e == NULL || e->env_status != ENV_RUNNABLE) {
 		if (TAILQ_EMPTY(&env_sched_list)) {
-			panic("env_sched_list is empty, no more free env");
+			panic("schedule: no runnable envs");
 		}
 
 
