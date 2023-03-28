@@ -41,7 +41,6 @@ void schedule(int yield) {
 			panic("schedule: no runnable envs");
 		}
 
-
 		if (e != NULL && e->env_status == ENV_RUNNABLE) {
 			TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
 		}
