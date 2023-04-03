@@ -538,6 +538,7 @@ void swap_init() {
 	}
 }
 
+
 // Interface for 'Passive Swap Out'
 struct Page *swap_alloc(Pde *pgdir, u_int asid) {
 	// Step 1: Ensure free page
@@ -564,7 +565,6 @@ struct Page *swap_alloc(Pde *pgdir, u_int asid) {
 				}
 			}
 		}
-
 		memcpy((void *)da, page2kva(p), BY2PG);
 		LIST_INSERT_HEAD(&page_free_swapable_list, p, pp_link);
 	}
@@ -599,9 +599,6 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 	
 	Pte *pgtable = (Pte *)KADDR(PTE_ADDR(pgdir[PDX(va)]));
 	u_long da = (pgtable[PTX(va)] >> 12) << 12;
-
-	va = ROUNDDOWN(va, BY2PG);
-
 	memcpy((void *)page2kva(pp), (void *)da, BY2PG);
 
 	for (int i = 0; i < 1024; i++) {
@@ -613,11 +610,12 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 		Pte * pgtable = (Pte *)KADDR(PTE_ADDR(*pgdir_entry));
 		for (int j = 0; j < 1024; j++) {
 			Pte * pgtable_entry = pgtable + j;
-			if ((pgtable[j] & PTE_SWP) && !(pgtable[j] & PTE_V) && (pgtable[j] >> 12) & 0xfffff == da / BY2PG) {
+			if ((pgtable[j] & PTE_SWP) && !(pgtable[j] & PTE_V) && ((pgtable[j] >> 12) & 0xfffff) == (da / BY2PG)) {
 				pgtable[j] |= PTE_V;
 				pgtable[j] ^= PTE_SWP;
 				pgtable[j] &= 0x00000fff;
 				pgtable[j] |= PPN(pp) << 12;
+				printk("%x\n", pgtable[j]);
 				tlb_invalidate(asid, va);
 			}
 		}
