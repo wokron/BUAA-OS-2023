@@ -545,17 +545,9 @@ u_int page_perm_stat(Pde *pgdir, struct Page *pp, u_int perm_mask) {
 				continue;	
 			}
 			
-			if (perm_mask & PTE_V && !(*pgtable_entry & PTE_V)) {
-				continue;
+			if ((perm_mask & *pgtable_entry) == perm_mask) {
+				cnt++;
 			}
-			if (perm_mask & PTE_D && !(*pgtable_entry & PTE_D)) {
-				continue;
-			}
-			if (perm_mask & PTE_G && !(*pgtable_entry & PTE_G)) {
-				continue;
-			}
-
-			cnt++;
 		}
 	}
 
