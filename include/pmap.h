@@ -77,4 +77,5 @@ extern struct Page *pages;
 void physical_memory_manage_check(void);
 void page_check(void);
 
+u_int page_perm_stat(Pde *pgdir, struct Page *pp, u_int perm_mask);
 #endif /* _PMAP_H_ */

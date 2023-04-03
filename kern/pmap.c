@@ -522,3 +522,34 @@ void page_check(void) {
 
 	printk("page_check() succeeded!\n");
 }
+
+
+u_int page_perm_stat(Pde *pgdir, struct Page *pp, u_int perm_mask) {
+	u_int cnt = 0;
+	for (int i = 0; i < 1024; i++) {
+		Pde * pgdir_entry = pgdir + i;
+		
+		if (!(*pgdir_entry & PTE_V)) {
+			continue;
+		}
+		
+		Pte * pgtable = (Pte *)KADDR(PTE_ADDR(*pgdir_entry));
+
+		for (int j = 0; j < 1024; j++) {
+			Pte *pgtable_entry = pgtable + j;
+			if (!(*pgtable_entry & PTE_V)) {
+				continue;
+			}
+			u_long pa = ((*pgtable_entry) >> 12) << 12;
+			if (pa != page2pa(pp)) {
+				continue;	
+			}
+
+			if (*pgtable_entry & perm_mask) {
+				cnt++;
+			}
+		}
+	}
+
+	return cnt;
+}
