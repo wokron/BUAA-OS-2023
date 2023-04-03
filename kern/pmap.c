@@ -522,3 +522,140 @@ void page_check(void) {
 
 	printk("page_check() succeeded!\n");
 }
+
+#include <swap.h>
+
+struct Page_list page_free_swapable_list;
+static u_char *disk_alloc();
+static void disk_free(u_char *pdisk);
+
+void swap_init() {
+	LIST_INIT(&page_free_swapable_list);
+	for (int i = SWAP_PAGE_BASE; i < SWAP_PAGE_END; i += BY2PG) {
+		struct Page *pp = pa2page(i);
+		LIST_REMOVE(pp, pp_link);
+		LIST_INSERT_HEAD(&page_free_swapable_list, pp, pp_link);
+	}
+}
+
+// Interface for 'Passive Swap Out'
+struct Page *swap_alloc(Pde *pgdir, u_int asid) {
+	// Step 1: Ensure free page
+	if (LIST_EMPTY(&page_free_swapable_list)) {
+		/* Your Code Here (1/3) */
+		struct Page *p = pa2page(SWAP_PAGE_BASE);
+
+		u_long da = disk_alloc();
+		
+		for (int i = 0; i < 1024; i++) {
+			if (!(pgdir[i] & PTE_V)) {
+				continue;
+			}
+			Pte * pgtable = (Pte *)KADDR(PTE_ADDR(pgdir[i]));
+			for (int j = 0; j < 1024; j++) {
+				if ((pgtable[j] & PTE_V) && ((pgtable[j] >> 12) & 0xfffff) == PPN(p)) {
+					pgtable[j] ^= PTE_V;
+					pgtable[j] |= PTE_SWP;
+					pgtable[j] &= 0x00000fff;
+					pgtable[j] |= (da / BY2PG) << 12;
+					
+					u_long va = i << 22 | j << 12;
+					tlb_invalidate(asid, va);
+				}
+			}
+		}
+
+		memcpy((void *)da, page2kva(p), BY2PG);
+		LIST_INSERT_HEAD(&page_free_swapable_list, p, pp_link);
+	}
+
+	// Step 2: Get a free page and clear it
+	struct Page *pp = LIST_FIRST(&page_free_swapable_list);
+	LIST_REMOVE(pp, pp_link);
+	memset((void *)page2kva(pp), 0, BY2PG);
+
+	return pp;
+}
+
+// Interfaces for 'Active Swap In'
+static int is_swapped(Pde *pgdir, u_long va) {
+	/* Your Code Here (2/3) */
+	Pde *pgdir_entryp = pgdir + PDX(va);
+
+	if (!(*pgdir_entryp & PTE_V)) {
+		return 0;
+	}
+
+	Pte *pgtable = (Pte *)KADDR(PTE_ADDR(*pgdir_entryp));
+
+	Pte *pgtable_entryp = pgtable + PTX(va);
+
+	return (*pgtable_entryp & PTE_SWP) && !(*pgtable_entryp & PTE_V);
+}
+
+static void swap(Pde *pgdir, u_int asid, u_long va) {
+	/* Your Code Here (3/3) */
+	struct Page * pp = swap_alloc(pgdir, asid);
+	
+	Pte *pgtable = (Pte *)KADDR(PTE_ADDR(pgdir[PDX(va)]));
+	u_long da = (pgtable[PTX(va)] >> 12) << 12;
+
+	va = ROUNDDOWN(va, BY2PG);
+
+	memcpy((void *)page2kva(pp), (void *)da, BY2PG);
+
+	for (int i = 0; i < 1024; i++) {
+		Pde * pgdir_entry = pgdir + i;
+		if (!(*pgdir_entry & PTE_V)) {
+			continue;
+		}
+
+		Pte * pgtable = (Pte *)KADDR(PTE_ADDR(*pgdir_entry));
+		for (int j = 0; j < 1024; j++) {
+			Pte * pgtable_entry = pgtable + j;
+			if ((pgtable[j] & PTE_SWP) && !(pgtable[j] & PTE_V) && (pgtable[j] >> 12) & 0xfffff == da / BY2PG) {
+				pgtable[j] |= PTE_V;
+				pgtable[j] ^= PTE_SWP;
+				pgtable[j] &= 0x00000fff;
+				pgtable[j] |= PPN(pp) << 12;
+				tlb_invalidate(asid, va);
+			}
+		}
+	}
+
+	disk_free(da);
+}
+
+Pte swap_lookup(Pde *pgdir, u_int asid, u_long va) {
+	// Step 1: If corresponding page is swapped out, swap it in
+	if (is_swapped(pgdir, va)) {
+		swap(pgdir, asid, va);
+	}
+
+	// Step 2: Look up page table element.
+	Pte *ppte;
+	page_lookup(pgdir, va, &ppte);
+
+	// Step 3: Return
+	return ppte == NULL ? 0 : *ppte;
+}
+
+// Disk Simulation (Do not modify)
+u_char swap_disk[SWAP_DISK_NPAGE * BY2PG] __attribute__((aligned(BY2PG)));
+u_char swap_disk_used[SWAP_DISK_NPAGE];
+
+static u_char *disk_alloc() {
+	int alloc = 0;
+	for (;alloc < SWAP_DISK_NPAGE && swap_disk_used[alloc]; alloc++) {
+		;
+	}
+	assert(alloc < SWAP_DISK_NPAGE);
+	swap_disk_used[alloc] = 1;
+	return &swap_disk[alloc * BY2PG];
+}
+
+static void disk_free(u_char *pdisk) {
+	int offset = pdisk - swap_disk;
+	assert(offset % BY2PG == 0);
+	swap_disk_used[offset / BY2PG] = 0;
+}
