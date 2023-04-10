@@ -354,6 +354,7 @@ int sys_ipc_recv(u_int dstva) {
 	/* Exercise 4.8: Your code here. (3/8) */
 	curenv->env_status = ENV_NOT_RUNNABLE;
 	TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
+	printk("block %x, empty:%d\n", curenv->env_id, TAILQ_EMPTY(&env_sched_list));
 
 	/* Step 5: Give up the CPU and block until a message is received. */
 	((struct Trapframe *)KSTACKTOP - 1)->regs[2] = 0;
@@ -409,15 +410,18 @@ int sys_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
 	/* Exercise 4.8: Your code here. (7/8) */
 	e->env_status = ENV_RUNNABLE;
 	TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
-
+	printk("debug:unblock %x success, empty:%d\n", envid, TAILQ_EMPTY(&env_sched_list));
 	/* Step 6: If 'srcva' is not zero, map the page at 'srcva' in 'curenv' to 'e->env_ipc_dstva'
 	 * in 'e'. */
 	/* Return -E_INVAL if 'srcva' is not zero and not mapped in 'curenv'. */
 	if (srcva != 0) {
 		/* Exercise 4.8: Your code here. (8/8) */
-		if (sys_mem_map(curenv->env_id, srcva, envid, e->env_ipc_dstva, perm) != 0) {
+		p = page_lookup(curenv->env_pgdir, srcva, NULL);
+		if (p == NULL) {
 			return -E_INVAL;
 		}
+
+		try(page_insert(e->env_pgdir, e->env_asid, p, e->env_ipc_dstva, perm));
 	}
 	return 0;
 }
@@ -520,7 +524,7 @@ void do_syscall(struct Trapframe *tf) {
 
 	/* Step 1: Add the EPC in 'tf' by a word (size of an instruction). */
 	/* Exercise 4.2: Your code here. (1/4) */
-	tf->cp0_epc++;
+	tf->cp0_epc+=4;
 
 	/* Step 2: Use 'sysno' to get 'func' from 'syscall_table'. */
 	/* Exercise 4.2: Your code here. (2/4) */
