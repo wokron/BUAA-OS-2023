@@ -353,8 +353,7 @@ int sys_ipc_recv(u_int dstva) {
 	 * 'env_sched_list'. */
 	/* Exercise 4.8: Your code here. (3/8) */
 	curenv->env_status = ENV_NOT_RUNNABLE;
-	TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
-	printk("block %x, empty:%d\n", curenv->env_id, TAILQ_EMPTY(&env_sched_list));
+	// TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
 
 	/* Step 5: Give up the CPU and block until a message is received. */
 	((struct Trapframe *)KSTACKTOP - 1)->regs[2] = 0;
@@ -410,7 +409,6 @@ int sys_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
 	/* Exercise 4.8: Your code here. (7/8) */
 	e->env_status = ENV_RUNNABLE;
 	TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
-	printk("debug:unblock %x success, empty:%d\n", envid, TAILQ_EMPTY(&env_sched_list));
 	/* Step 6: If 'srcva' is not zero, map the page at 'srcva' in 'curenv' to 'e->env_ipc_dstva'
 	 * in 'e'. */
 	/* Return -E_INVAL if 'srcva' is not zero and not mapped in 'curenv'. */
