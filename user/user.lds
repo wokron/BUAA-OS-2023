@@ -26,7 +26,7 @@ SECTIONS {
 		*(.data)
 	} : data
 
-	.bss : {
+	.bss ALIGN(4096) : {
 		*(.bss)
 	} : data
 
