@@ -75,7 +75,7 @@ void do_tlb_mod(struct Trapframe *tf) {
 		tf->regs[29] -= sizeof(tf->regs[4]);
 		// Hint: Set 'cp0_epc' in the context 'tf' to 'curenv->env_user_tlb_mod_entry'.
 		/* Exercise 4.11: Your code here. */
-
+		tf->cp0_epc = curenv->env_user_tlb_mod_entry;
 	} else {
 		panic("TLB Mod but no user handler registered");
 	}
