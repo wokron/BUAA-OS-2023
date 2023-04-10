@@ -193,8 +193,7 @@ int sys_mem_map(u_int srcid, u_int srcva, u_int dstid, u_int dstva, u_int perm) 
 	/* Step 4: Find the physical page mapped at 'srcva' in the address space of 'srcid'. */
 	/* Return -E_INVAL if 'srcva' is not mapped. */
 	/* Exercise 4.5: Your code here. (4/4) */
-	Pte *pte;
-	if ((pp = page_lookup(srcenv->env_pgdir, srcva, &pte)) == NULL) {
+	if ((pp = page_lookup(srcenv->env_pgdir, srcva, NULL)) == NULL) {
 		return -E_INVAL;
 	}
 
@@ -383,7 +382,7 @@ int sys_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
 
 	/* Step 1: Check if 'srcva' is either zero or a legal address. */
 	/* Exercise 4.8: Your code here. (4/8) */
-	if (is_illegal_va(srcva)) {
+	if (srcva != 0 && is_illegal_va(srcva)) {
 		return -E_INVAL;
 	}
 
@@ -416,7 +415,9 @@ int sys_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
 	/* Return -E_INVAL if 'srcva' is not zero and not mapped in 'curenv'. */
 	if (srcva != 0) {
 		/* Exercise 4.8: Your code here. (8/8) */
-		try(sys_mem_map(curenv->env_id, srcva, envid, e->env_ipc_dstva, perm));
+		if (sys_mem_map(curenv->env_id, srcva, envid, e->env_ipc_dstva, perm) != 0) {
+			return -E_INVAL;
+		}
 	}
 	return 0;
 }
