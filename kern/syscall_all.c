@@ -93,7 +93,7 @@ int sys_env_destroy(u_int envid) {
  */
 int sys_set_tlb_mod_entry(u_int envid, u_int func) {
 	struct Env *env;
-
+	
 	/* Step 1: Convert the envid to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Exercise 4.12: Your code here. (1/2) */
 	try(envid2env(envid, &env, 1));
@@ -247,10 +247,11 @@ int sys_mem_unmap(u_int envid, u_int va) {
  */
 int sys_exofork(void) {
 	struct Env *e;
-
+	
 	/* Step 1: Allocate a new env using 'env_alloc'. */
 	/* Exercise 4.9: Your code here. (1/4) */
 	try(env_alloc(&e, curenv->env_id));
+	
 
 	/* Step 2: Copy the current Trapframe below 'KSTACKTOP' to the new env's 'env_tf'. */
 	/* Exercise 4.9: Your code here. (2/4) */
@@ -264,7 +265,7 @@ int sys_exofork(void) {
 	/* Exercise 4.9: Your code here. (4/4) */
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
-
+	
 	return e->env_id;
 }
 
@@ -282,7 +283,6 @@ int sys_exofork(void) {
  */
 int sys_set_env_status(u_int envid, u_int status) {
 	struct Env *env;
-
 	/* Step 1: Check if 'status' is valid. */
 	/* Exercise 4.14: Your code here. (1/3) */
 	if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE) {
@@ -298,7 +298,7 @@ int sys_set_env_status(u_int envid, u_int status) {
 	if (env->env_status != ENV_NOT_RUNNABLE && status == ENV_NOT_RUNNABLE) {
 		TAILQ_REMOVE(&env_sched_list, env, env_sched_link);
 	}
-	if (env->env_status != ENV_RUNNABLE && status == ENV_RUNNABLE) {
+	else if (env->env_status != ENV_RUNNABLE && status == ENV_RUNNABLE) {
 		TAILQ_INSERT_TAIL(&env_sched_list, env, env_sched_link);
 	}
 
@@ -370,7 +370,7 @@ int sys_ipc_recv(u_int dstva) {
 	 * 'env_sched_list'. */
 	/* Exercise 4.8: Your code here. (3/8) */
 	curenv->env_status = ENV_NOT_RUNNABLE;
-	// TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
+//	TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
 
 	/* Step 5: Give up the CPU and block until a message is received. */
 	((struct Trapframe *)KSTACKTOP - 1)->regs[2] = 0;
@@ -539,11 +539,11 @@ void do_syscall(struct Trapframe *tf) {
 
 	/* Step 1: Add the EPC in 'tf' by a word (size of an instruction). */
 	/* Exercise 4.2: Your code here. (1/4) */
-	tf->cp0_epc+=4;
+	tf->cp0_epc += 4;
 
 	/* Step 2: Use 'sysno' to get 'func' from 'syscall_table'. */
 	/* Exercise 4.2: Your code here. (2/4) */
-	func = syscall_table[sysno];	
+	func = syscall_table[sysno];
 
 	/* Step 3: First 3 args are stored at $a1, $a2, $a3. */
 	u_int arg1 = tf->regs[5];
