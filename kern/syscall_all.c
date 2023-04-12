@@ -370,7 +370,7 @@ int sys_ipc_recv(u_int dstva) {
 	 * 'env_sched_list'. */
 	/* Exercise 4.8: Your code here. (3/8) */
 	curenv->env_status = ENV_NOT_RUNNABLE;
-//	TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
+	TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
 
 	/* Step 5: Give up the CPU and block until a message is received. */
 	((struct Trapframe *)KSTACKTOP - 1)->regs[2] = 0;
