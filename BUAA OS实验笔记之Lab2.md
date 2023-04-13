@@ -296,7 +296,7 @@ if ((LIST_NEXT((elm), field) = LIST_NEXT((listelm), field)) != NULL) \
 
 但这里出现了问题，为什么第二行使用的是 `&LIST_NEXT((elm), field)` 而非 `&elm`？重新看一下 `LIST_ENTRY` 的定义，可以发现对 le_prev 的注释是 `/* address of previous next element */`。(前一个(下一个元素))的地址，也就是说本来 `le_prev` 的地址就是上一个元素的 `le_next` 的地址。这样做有什么意义呢？叶gg说这样方便定义头指针。因为 `LIST_HEAD` 和 `LIST_ENTRY` 不是同一个类型，如果 `le_prev` 的类型是 `struct type *`，那么头结点也必须是 `type` 类型，这会浪费一个指针大小的空间。
 
-> 有些文章可能会认为这个链表无法直接访问前节点，其实这是错的（因为如果是单向链表，那么根本没必要设计 `le_prev`）。当我们将 `LIST_ENTRY` 类型作为链表元素结构体的第一个属性的时候，`le_next` 的地址其实和结构体本身的地址相同。想要访问前一个元素时，只需要将 `struct type **` 类型转换为 `struct type *` 即可。
+> 有些文章可能会认为这个链表无法直接访问前节点，其实这应该是错的（因为如果是单向链表，那么根本没必要设计 `le_prev`）。
 
 这样的话，代码的第三四行也可以理解了。`listelm` 的下一个元素是 `elm`。`elm` 的 `le_prev` 的值是前一个元素，`listelm` 的 `le_next` 的地址。
 ```c
