@@ -44,7 +44,9 @@ void do_ov(struct Trapframe *tf) {
 		u_int regsx = (inst >> 21) & ((1 << 5)-1);
 		u_int regtx = (inst >> 16) & ((1 << 5)-1);
 //		printk("s:%x; t:%x, imm:%x", tf->regs[regsx], tf->regs[regtx], imm);
+
 		tf->regs[regtx] = tf->regs[regsx] / 2 + imm / 2;
+		tf->cp0_epc += 4;
 	} else {
 		if ((inst & ((1<<2)-1)) == 0) {
 			printk("add ov handled\n");
