@@ -3,9 +3,11 @@
 #include <stackframe.h>
 
 .macro BUILD_HANDLER exception handler
-NESTED(handle_\exception, TF_SIZE, zero)
+NESTED(handle_\exception, TF_SIZE + 8, zero)
 	move    a0, sp
+	addiu   sp, sp, -8
 	jal     \handler
+	addiu   sp, sp, 8
 	j       ret_from_exception
 END(handle_\exception)
 .endm
