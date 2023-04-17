@@ -446,7 +446,7 @@ static inline void pre_env_run(struct Env *e) {
 	count++;
 #endif
 #ifdef MOS_SCHED_END_PC
-	struct Trapframe *tf = (struct Trapframe *)KSTACKTOP - 1;
+	struct Trapframe *tf = curenv == e ? (struct Trapframe *)KSTACKTOP - 1 : &e->env_tf;
 	u_int epc = tf->cp0_epc;
 	if (epc == MOS_SCHED_END_PC) {
 		printk("env %08x reached end pc: 0x%08x, $v0=0x%08x\n", e->env_id, epc,
