@@ -959,7 +959,7 @@ int sys_ipc_recv(u_int dstva) {
 
 你可能会想，`schedule` 函数不是没有返回的吗？那这里设置的返回值保存在哪里？另外如果没有返回，该系统调用又要如何返回到用户程序中？关键在于 `env_run` 函数中。在进程切换之前，会将 trap frame 存储到 `env->env_tf` 中。当重新轮到该进程运行的时候，就会从 `env_tf` 存储的位置恢复现场。这里也重新强调了 `sys_exofork` 中为什么不能使用 `env_tf`。
 
-## （2）信息发送
+### （2）信息发送
 在 `sys_ipc_try_send` 中我们同样判断地址是否正确。并通过 envid 获取进程控制块。需要注意这里 `envid2env` 的 `checkperm` 参数为 0，而此前所有的参数值均为 1。这是因为进程通信不一定只在父子进程之间。
 ```c
 int sys_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
