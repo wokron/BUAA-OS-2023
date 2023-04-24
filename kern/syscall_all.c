@@ -508,6 +508,10 @@ int sys_ipc_try_group_send(u_int whom, u_int val, const void *srcva, u_int perm)
 
 	try(envid2env(whom, &e, 0));
 
+	if (!e->env_ipc_recving) {
+		return -E_IPC_NOT_RECV;
+	}
+
 	if (e->env_gid != curenv->env_gid) {
 		return -E_IPC_NOT_GROUP;
 	}
