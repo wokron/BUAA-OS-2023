@@ -37,3 +37,24 @@ u_int ipc_recv(u_int *whom, void *dstva, u_int *perm) {
 
 	return env->env_ipc_value;
 }
+
+
+/* copy to user/lib/ipc.c */
+
+void set_gid(u_int gid) {
+    // 你需要实现此 syscall_set_gid 系统调用
+    syscall_set_gid(gid);
+}
+
+int ipc_group_send(u_int whom, u_int val, const void *srcva, u_int perm) {
+    int r;
+    // 你需要实现此 syscall_ipc_try_group_send 系统调用
+    while ((r = syscall_ipc_try_group_send(whom, val, srcva, perm)) != 0) {
+        // 接受方进程尚未准备好接受消息，进程切换，后续继续轮询尝试发送请求
+        if (r == -E_IPC_NOT_RECV) syscall_yield();
+        // 接收方进程准备好接收消息，但非同组通信，消息发送失败，停止轮询，返回错误码 -E_IPC_NOT_GROUP
+        if (r == -E_IPC_NOT_GROUP) return -E_IPC_NOT_GROUP;
+    }
+    // 函数返回0，告知用户成功发送消息
+    return 0;
+}

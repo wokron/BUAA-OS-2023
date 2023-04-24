@@ -56,3 +56,6 @@
 	} while (0)
 
 #endif // _ERROR_H_
+
+
+#define E_IPC_NOT_GROUP 14

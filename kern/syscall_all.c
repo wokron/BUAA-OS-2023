@@ -498,6 +498,26 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return 0;
 }
 
+
+void sys_set_gid(u_int gid) {
+	curenv->env_gid = gid;
+}
+
+int sys_ipc_try_group_send(u_int whom, u_int val, const void *srcva, u_int perm) {
+	struct Env * e;
+
+	try(envid2env(whom, &e, 0));
+
+	if (e->env_gid != curenv->env_gid) {
+		return -E_IPC_NOT_GROUP;
+	}
+
+	try(sys_ipc_try_send(whom, val, srcva, perm));
+
+	return 0;
+}
+
+
 void *syscall_table[MAX_SYSNO] = {
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
@@ -517,6 +537,8 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_cgetc] = sys_cgetc,
     [SYS_write_dev] = sys_write_dev,
     [SYS_read_dev] = sys_read_dev,
+    [SYS_set_gid] = sys_set_gid,
+    [SYS_ipc_try_group_send] = sys_ipc_try_group_send,
 };
 
 /* Overview:

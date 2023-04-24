@@ -74,3 +74,11 @@ int syscall_read_dev(void *va, u_int dev, u_int len) {
 	/* Exercise 5.2: Your code here. (2/2) */
 
 }
+
+
+void syscall_set_gid(u_int gid) {
+	msyscall(SYS_set_gid, gid);
+}
+int syscall_ipc_try_group_send(u_int whom, u_int val, const void *srcva, u_int perm) {
+	return msyscall(SYS_ipc_try_group_send, whom, val, srcva, perm);
+}
