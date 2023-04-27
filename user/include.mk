@@ -15,10 +15,10 @@ ifeq ($(call lab-ge,5), true)
 	USERLIB      += fd.o \
 			pageref.o \
 			file.o \
-			pipe.o \
 			fsipc.o \
 			console.o \
 			fprintf.o
+
 endif
 
 ifeq ($(call lab-ge,6), true)
@@ -27,7 +27,7 @@ ifeq ($(call lab-ge,6), true)
 			testpiperace.x \
 			testptelibrary.x
 
-	USERLIB      += wait.o spawn.o
+	USERLIB      += wait.o spawn.o pipe.o
 	USERAPPS     := num.b  \
 			echo.b \
 			halt.b \
