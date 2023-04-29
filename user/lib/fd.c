@@ -180,7 +180,7 @@ int read(int fdnum, void *buf, u_int n) {
 	// Step 2: Check the open mode in 'fd'.
 	// Return -E_INVAL if the file is opened for writing only (O_WRONLY).
 	/* Exercise 5.10: Your code here. (2/4) */
-	if ((fd->fd_omode & O_ACCMODE) == O_RDONLY) {
+	if ((fd->fd_omode & O_ACCMODE) == O_WRONLY) {
 		return -E_INVAL;
 	}
 
