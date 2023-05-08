@@ -500,23 +500,37 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return 0;
 }
 
-int barriers[1000] = {0};
+struct Barrier {
+	u_int envids[100];
+	u_int nums;
+	u_int n;
+} barriers[1000] = {0};
 int now_barrier = 0;
 
 void sys_barrier_alloc(int n) {
 	curenv->env_barrier_no = now_barrier;
-	barriers[now_barrier] = n;
+	barriers[now_barrier].n = n;
+	barriers[now_barrier].nums = 0;
+
 	now_barrier++;
 }
 
 int sys_barrier_wait() {
-	if (!curenv->env_barrier_wait) {
-		curenv->env_barrier_wait = 1;
-		barriers[curenv->env_barrier_no]--;
-	}
-//	printk("barrier_no:%d\n", curenv->env_barrier_no);
+	struct Barrier b = barriers[curenv->env_barrier_no];
 
-	return barriers[curenv->env_barrier_no] == 0;
+	if (b.nums + 1 == b.n) {
+		for (int i = 0; i < b.nums; i++) {
+			struct Env * e;
+			envid2env(b.envids[i], &e, 0);
+			e->env_status = ENV_RUNNABLE;
+			TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
+		}
+	} else {
+		curenv->env_status = ENV_NOT_RUNNABLE;
+		TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
+		((struct Trapframe *)KSTACKTOP - 1)->regs[2] = 0;
+		schedule(1);
+	}
 }
 
 void *syscall_table[MAX_SYSNO] = {

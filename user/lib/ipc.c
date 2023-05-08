@@ -45,9 +45,5 @@ void barrier_alloc(int n) {
 }
 
 void barrier_wait(void) {
-//	debugf("enter barrier_wait\n");
-	while (!syscall_barrier_wait()) {
-//		debugf("loop\n");
-		syscall_yield();
-	}
+	int r = syscall_barrier_wait();
 }
