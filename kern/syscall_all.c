@@ -265,7 +265,9 @@ int sys_exofork(void) {
 	/* Exercise 4.9: Your code here. (4/4) */
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
-	
+	e->env_barrier_no = curenv->env_barrier_no;
+	e->env_barrier_wait = 0;
+
 	return e->env_id;
 }
 
@@ -498,6 +500,25 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return 0;
 }
 
+int barriers[1000] = {0};
+int now_barrier = 0;
+
+void sys_barrier_alloc(int n) {
+	curenv->env_barrier_no = now_barrier;
+	barriers[now_barrier] = n;
+	now_barrier++;
+}
+
+int sys_barrier_wait() {
+	if (!curenv->env_barrier_wait) {
+		curenv->env_barrier_wait = 1;
+		barriers[curenv->env_barrier_no]--;
+	}
+//	printk("barrier_no:%d\n", curenv->env_barrier_no);
+
+	return barriers[curenv->env_barrier_no] == 0;
+}
+
 void *syscall_table[MAX_SYSNO] = {
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
@@ -517,6 +538,8 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_cgetc] = sys_cgetc,
     [SYS_write_dev] = sys_write_dev,
     [SYS_read_dev] = sys_read_dev,
+    [SYS_barrier_alloc] = sys_barrier_alloc,
+    [SYS_barrier_wait] = sys_barrier_wait,
 };
 
 /* Overview:

@@ -138,3 +138,7 @@ int sync(void);
 #define O_MKDIR 0x0800 /* create directory, not regular file */
 
 #endif
+void syscall_barrier_alloc(int n);
+int syscall_barrier_wait(void);
+void barrier_alloc(int n);
+void barrier_wait(void);
