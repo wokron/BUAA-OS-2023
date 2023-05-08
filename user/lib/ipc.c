@@ -58,7 +58,7 @@ int sem_getvalue(int sem_id) {
 }
 int sem_getid(const char *name) {
 	for (int i = 0; i < 20; i++) {
-		if (strcmp(sem_names[i], name) == 0) {
+		if (strcmp(sem_names[i], name) == 0 && sem_getvalue(i) != -E_NO_SEM) {
 			return i;
 		}
 	}

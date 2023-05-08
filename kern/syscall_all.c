@@ -522,14 +522,14 @@ int sys_sem_init(int init_value, int checkperm) {
 
 }
 
-int is_father(int fa_envid, int ch_envid) {
+int is_father(u_int fa_envid, u_int ch_envid) {
 	while (ch_envid != 0) {
 		if (fa_envid == ch_envid) {
 			return 1;
 		}
 		struct Env * env;
 		envid2env(ch_envid, &env, 0);
-		ch_envid = env->env_id;
+		ch_envid = env->env_parent_id;
 	}
 	return 0;
 }
