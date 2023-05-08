@@ -511,6 +511,8 @@ int sem_num = 0;
 int sys_sem_init(int init_value, int checkperm) {
 //	printk("init success\n");
 	int sem_id = sem_num++;
+	if (sem_id >= 5000)
+		return -E_NO_SEM;
 	sems[sem_id].value = init_value;
 	sems[sem_id].checkperm = checkperm;
 	sems[sem_id].creater = curenv;
@@ -534,6 +536,8 @@ int is_father(int fa_envid, int ch_envid) {
 
 int sys_sem_wait(int sem_id) {
 //	printk("enter sem wait, sem id=%d\n", sem_id);
+	if (sem_id < 0 || sem_id >= sem_num)
+		return -E_NO_SEM;
 	struct Sem * sem = sems + sem_id;
 	if (sem->checkperm && !is_father(sem->creater->env_id, curenv->env_id)) {
 //		printk("error in wait!!\n");
@@ -555,6 +559,8 @@ int sys_sem_wait(int sem_id) {
 }
 
 int sys_sem_post(int sem_id) {
+	if (sem_id < 0 || sem_id >= sem_num)
+		return -E_NO_SEM;
 //	printk("enter post\n");
 	struct Sem * sem = sems + sem_id;
 //	printk("sem val=%d", sem->value);
@@ -571,6 +577,8 @@ int sys_sem_post(int sem_id) {
 }
 
 int sys_sem_getvalue(int sem_id) {
+	if (sem_id < 0 || sem_id >= sem_num)
+		return -E_NO_SEM;
 	struct Sem * sem = sems + sem_id;
 	return sem->value;
 }
