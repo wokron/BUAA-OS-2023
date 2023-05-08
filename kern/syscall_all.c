@@ -504,14 +504,14 @@ struct Sem {
 	struct Env * creater;
 	u_int blocks[500];
 	int top;
-} sems[5000];
+} sems[10];
 
 int sem_num = 0;
 
 int sys_sem_init(int init_value, int checkperm) {
 //	printk("init success\n");
 	int sem_id = sem_num++;
-	if (sem_id >= 5000)
+	if (sem_id >= 10)
 		return -E_NO_SEM;
 	sems[sem_id].value = init_value;
 	sems[sem_id].checkperm = checkperm;
