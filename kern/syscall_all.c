@@ -498,6 +498,43 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return 0;
 }
 
+struct Sem {
+	int value;
+	int checkperm;
+	struct Env * creater;
+} sems[5000];
+
+int sem_num = 0;
+
+int sem_init(int init_value, int checkperm) {
+	int sem_id = sem_num++;
+	sems[sem_id].value = init_value;
+	sems[sem_id].checkperm = checkperm;
+	sems[sem_id].creater = curenv;
+
+	return sem_id;
+}
+
+int is_father(int fa_envid, int ch_envid) {
+	while (ch_envid != 0) {
+		if (fa_envid == ch_envid) {
+			return 1;
+		}
+		struct Env * env = envs + ENVX(ch_envid);
+		ch_envid = env->env_id;
+	}
+	return 0;
+}
+
+int sys_sem_wait(int sem_id) {
+	struct Sem * sem = sems + sem_id;
+	if (sem->checkperm && !is_father(sem->creater->env_id, curenv->env_id)) {
+		return -E_NO_SEM;
+	}
+
+	
+}
+
 void *syscall_table[MAX_SYSNO] = {
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
