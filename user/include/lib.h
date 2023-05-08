@@ -145,7 +145,7 @@ int sem_post(int sem_id);
 int sem_getvalue(int sem_id);
 int sem_getid(const char *name);
 
-int syscall_sem_init(itn init_value, int checkperm);
+int syscall_sem_init(int init_value, int checkperm);
 int syscall_sem_wait(int sem_id);
 int syscall_sem_post(int sem_id);
 int syscall_sem_getvalue(int sem_id);

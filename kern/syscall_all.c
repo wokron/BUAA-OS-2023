@@ -502,17 +502,22 @@ struct Sem {
 	int value;
 	int checkperm;
 	struct Env * creater;
+	u_int blocks[500];
+	int top;
 } sems[5000];
 
 int sem_num = 0;
 
-int sem_init(int init_value, int checkperm) {
+int sys_sem_init(int init_value, int checkperm) {
+//	printk("init success\n");
 	int sem_id = sem_num++;
 	sems[sem_id].value = init_value;
 	sems[sem_id].checkperm = checkperm;
 	sems[sem_id].creater = curenv;
-
+	sems[sem_id].top = -1;
+//	printk("id=%d, value=%d\n", sem_id, sems[sem_id].value);
 	return sem_id;
+
 }
 
 int is_father(int fa_envid, int ch_envid) {
@@ -520,19 +525,54 @@ int is_father(int fa_envid, int ch_envid) {
 		if (fa_envid == ch_envid) {
 			return 1;
 		}
-		struct Env * env = envs + ENVX(ch_envid);
+		struct Env * env;
+		envid2env(ch_envid, &env, 0);
 		ch_envid = env->env_id;
 	}
 	return 0;
 }
 
 int sys_sem_wait(int sem_id) {
+//	printk("enter sem wait, sem id=%d\n", sem_id);
 	struct Sem * sem = sems + sem_id;
 	if (sem->checkperm && !is_father(sem->creater->env_id, curenv->env_id)) {
+//		printk("error in wait!!\n");
 		return -E_NO_SEM;
 	}
 
-	
+	if (sem->value > 0) {
+		sem->value--;
+		return 0;
+	} else if (sem->value == 0) {
+//		printk("value=%d\n", sem->value);
+		sem->blocks[++sem->top] = curenv->env_id;
+		curenv->env_status = ENV_NOT_RUNNABLE;
+		TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
+		((struct Trapframe *)KSTACKTOP - 1)->regs[2] = 0;
+		schedule(1);
+	}
+	return 0;
+}
+
+int sys_sem_post(int sem_id) {
+//	printk("enter post\n");
+	struct Sem * sem = sems + sem_id;
+//	printk("sem val=%d", sem->value);
+	sem->value++;
+//	printk("sem val=%d", sem->value);
+	if (sem->top >= 0) {
+		u_int envid = sem->blocks[sem->top--];
+		struct Env * e;
+		envid2env(envid, &e, 0);
+		e->env_status = ENV_RUNNABLE;
+		TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
+	}
+	return 0;
+}
+
+int sys_sem_getvalue(int sem_id) {
+	struct Sem * sem = sems + sem_id;
+	return sem->value;
 }
 
 void *syscall_table[MAX_SYSNO] = {
@@ -554,6 +594,10 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_cgetc] = sys_cgetc,
     [SYS_write_dev] = sys_write_dev,
     [SYS_read_dev] = sys_read_dev,
+    [SYS_sem_init] = sys_sem_init,
+    [SYS_sem_wait] = sys_sem_wait,
+    [SYS_sem_post] = sys_sem_post,
+    [SYS_sem_getvalue] = sys_sem_getvalue,
 };
 
 /* Overview:

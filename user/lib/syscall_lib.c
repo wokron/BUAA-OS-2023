@@ -75,7 +75,7 @@ int syscall_read_dev(void *va, u_int dev, u_int len) {
 
 }
 
-int syscall_sem_init(itn init_value, int checkperm) {
+int syscall_sem_init(int init_value, int checkperm) {
 	return msyscall(SYS_sem_init, init_value, checkperm);
 }
 int syscall_sem_wait(int sem_id) {

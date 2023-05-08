@@ -38,15 +38,29 @@ u_int ipc_recv(u_int *whom, void *dstva, u_int *perm) {
 	return env->env_ipc_value;
 }
 
-int sem_init(const char *name, int init_value, int checkperm) {
+char sem_names[1000][1000];
 
+int sem_init(const char *name, int init_value, int checkperm) {
+//	debugf("enter user sem init\n");
+	int sem_id = syscall_sem_init(init_value, checkperm);
+//	debugf("finish sem init\n");
+	strcpy(sem_names[sem_id], name);
+	return sem_id;
 }
 int sem_wait(int sem_id) {
-
+	return syscall_sem_wait(sem_id);
 }
 int sem_post(int sem_id) {
+	return syscall_sem_post(sem_id);
 }
 int sem_getvalue(int sem_id) {
+	return syscall_sem_getvalue(sem_id);
 }
 int sem_getid(const char *name) {
+	for (int i = 0; i < 20; i++) {
+		if (strcmp(sem_names[i], name) == 0) {
+			return i;
+		}
+	}
+	return -E_NO_SEM;
 }
