@@ -526,6 +526,7 @@ int sys_barrier_wait() {
 			TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
 		}
 	} else {
+		b.envids[b.nums++] = curenv->env_id;
 		curenv->env_status = ENV_NOT_RUNNABLE;
 		TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
 		((struct Trapframe *)KSTACKTOP - 1)->regs[2] = 0;
