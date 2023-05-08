@@ -561,6 +561,9 @@ int sys_sem_wait(int sem_id) {
 int sys_sem_post(int sem_id) {
 	if (sem_id < 0 || sem_id >= sem_num)
 		return -E_NO_SEM;
+	if (sem->checkperm && !is_father(sem->creater->env_id, curenv->env_id)) {
+		return -E_NO_SEM;
+	}
 //	printk("enter post\n");
 	struct Sem * sem = sems + sem_id;
 //	printk("sem val=%d", sem->value);
@@ -577,6 +580,10 @@ int sys_sem_post(int sem_id) {
 }
 
 int sys_sem_getvalue(int sem_id) {
+	if (sem->checkperm && !is_father(sem->creater->env_id, curenv->env_id)) {
+		return -E_NO_SEM;
+	}
+
 	if (sem_id < 0 || sem_id >= sem_num)
 		return -E_NO_SEM;
 	struct Sem * sem = sems + sem_id;
