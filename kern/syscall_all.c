@@ -572,6 +572,7 @@ int sys_sem_post(int sem_id) {
 	if (sem->top >= 0) {
 		u_int envid = sem->blocks[sem->top--];
 		struct Env * e;
+		sem->value--;
 		envid2env(envid, &e, 0);
 		e->env_status = ENV_RUNNABLE;
 		TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
