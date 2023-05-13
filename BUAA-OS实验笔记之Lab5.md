@@ -82,7 +82,7 @@ struct Super {
 };
 ```
 
-在本文件系统中，文件信息通过 `struct File` 结构体存储。该结构体同样定义在 user/include/fs.h 总
+在本文件系统中，文件信息通过 `struct File` 结构体存储。该结构体同样定义在 user/include/fs.h 中，在本文的后面我们将其称为文件控制块。
 ```c
 struct File {
 	char f_name[MAXNAMELEN]; // filename
@@ -96,9 +96,9 @@ struct File {
 } __attribute__((aligned(4), packed));
 ```
 
-该结构体中包含了文件名 `f_name`，文件大小 `f_size`，文件类型 `f_type`，和用于存储指向存储文件内容的磁盘块的编号的数组 `f_direct`，以及指向存储 “存储指向存储文件内容的磁盘块的编号的数组” 的磁盘块的编号 `f_indirect`，还有自己所在的目录 `f_dir`。最后 `f_pad` 将 `struct File` 结构体的大小填充到 `BY2FILE`，保证多个 `struct File` 能够填满整个磁盘。
+该结构体中包含了文件名 `f_name`，文件大小 `f_size`，文件类型 `f_type`，和用于存储指向存储文件内容的磁盘块的编号的数组 `f_direct`，以及指向存储 “存储指向存储文件内容的磁盘块的编号的数组” 的磁盘块的编号 `f_indirect`，还有自己所在的目录 `f_dir`。最后 `f_pad` 将文件控制块的大小填充到 `BY2FILE`，保证多个文件控制块能够填满整个磁盘。
 
-> `f_direct` 和 `f_indirect` 用一句话来表示似乎有些困难，这里再重新说明一下。文件的内容需要在磁盘中存储，这些内容分布于不同的磁盘块中，因此还需要对这些内容进行管理，也就是要再分配一个磁盘块用于存储 `struct File`，该结构体中要存储哪些存储文件内容的磁盘块的地址。`f_direct` 中就存储了前 `NDIRECT` 个磁盘块的编号方便快速访问。但如果文件较大，超出了 `NDIRECT` 个磁盘块的大小的话要怎么办？这就要再分配一个磁盘块，用这个磁盘块的全部空间作为存储磁盘块编号的数组，保存那些存储了文件内容的磁盘块的编号。再使用 `f_indirect` 保存这个新分配的，作为数组的磁盘块的编号。
+> `f_direct` 和 `f_indirect` 用一句话来表示似乎有些困难，这里再重新说明一下。文件的内容需要在磁盘中存储，这些内容分布于不同的磁盘块中，因此还需要对这些内容进行管理，也就是要再分配一个磁盘块用于存储文件控制块，该结构体中要存储哪些存储文件内容的磁盘块的地址。`f_direct` 中就存储了前 `NDIRECT` 个磁盘块的编号方便快速访问。但如果文件较大，超出了 `NDIRECT` 个磁盘块的大小的话要怎么办？这就要再分配一个磁盘块，用这个磁盘块的全部空间作为存储磁盘块编号的数组，保存那些存储了文件内容的磁盘块的编号。再使用 `f_indirect` 保存这个新分配的，作为数组的磁盘块的编号。
 >
 > 为了方便，`f_indirect` 指向的磁盘块的前 `NDIRECT` 个元素不保存编号。现在我们就可以计算在这个文件系统中，文件的最大大小了：我们可以有 `BY2BLK / 4` 个磁盘块用于存储，每个磁盘块又有 `BY2BLK` 的空间，那么总共就有 `BY2BLK**2 / 4` 的空间可以用于单一文件的存储。
 
@@ -162,7 +162,7 @@ void write_directory(struct File *dirf, char *path) {
 
 ```
 
-在 `create_file` 函数中，遍历了 `dirf` 文件下用于保存内容（对于目录来说，内容就是 `struct File` 结构体）的所有磁盘块。这里我们使用 `f_direct` 和 `f_indirect` 获取了对应磁盘块的编号。
+在 `create_file` 函数中，遍历了 `dirf` 文件下用于保存内容（对于目录来说，内容就是文件控制块）的所有磁盘块。这里我们使用 `f_direct` 和 `f_indirect` 获取了对应磁盘块的编号。
 ```c
 struct File *create_file(struct File *dirf) {
 	int nblk = dirf->f_size / BY2BLK;
@@ -181,7 +181,7 @@ struct File *create_file(struct File *dirf) {
 		}
 ```
 
-该磁盘块的空间全部用于存储 `struct File`。我们再在一个磁盘块中遍历所有 `struct File`，看是否有未使用的 `struct File`，用该处空间表示我们新创建的文件。这样遍历的原因是可能出现中间磁盘块中文件被删除，或者最后一个磁盘块还未用满的情况。
+该磁盘块的空间全部用于存储文件控制块。我们再在一个磁盘块中遍历所有文件控制块，看是否有未使用的文件控制块，用该处空间表示我们新创建的文件。这样遍历的原因是可能出现中间磁盘块中文件被删除，或者最后一个磁盘块还未用满的情况。
 ```c
 		// Get the directory block using the block number.
 		struct File *blk = (struct File *)(disk[bno].data);
@@ -198,7 +198,7 @@ struct File *create_file(struct File *dirf) {
 	}
 ```
 
-最后如果没有找到未使用的 `struct File`，就说明所有的已分配给当前目录文件，用于存储 `struct File` 的磁盘块都被占满了。这时就需要调用 `make_link_block` 新申请一个磁盘块。该磁盘块中第一个 `struct File` 的空间就是新创建的文件。
+最后如果没有找到未使用的文件控制块，就说明所有的已分配给当前目录文件，用于存储文件控制块的磁盘块都被占满了。这时就需要调用 `make_link_block` 新申请一个磁盘块。该磁盘块中第一个文件控制块的位置就代表了新创建的文件。
 ```c
     // Step 2: If no unused file is found, allocate a new block using 'make_link_block' function
 	// and return a pointer to the new block on 'disk'.
@@ -774,7 +774,7 @@ int file_open(char *path, struct File **file) {
 }
 ```
 
-`walk_path` 函数位于同一个文件中，主要内容就是解析路径，根据路径不断找到目录下的文件，找到最后得到的就是表示路径对应的文件的 `struct File`。
+`walk_path` 函数位于同一个文件中，主要内容就是解析路径，根据路径不断找到目录下的文件，找到最后得到的就是表示路径对应的文件的文件控制块。
 ```c
 int walk_path(char *path, struct File **pdir, struct File **pfile, char *lastelem) {
 	char *p;
@@ -842,7 +842,7 @@ int walk_path(char *path, struct File **pdir, struct File **pfile, char *lastele
 
 该函数大部分工作都用于完成路径解析和异常处理，不用解释相信各位也能理解。唯一需要注意的是 `dir_lookup` 函数。该函数用于找到指定目录下的指定名字的文件。该函数也位于同一个文件中，也是我们需要填写代码的函数。
 
-该函数本身很简单，与 tools/fsformat.c 中的 `create_file` 类似。都是获取文件的所有磁盘块，遍历其中所有的 `struct File`。只不过这里需要返回指定名字的文件对应的 `struct File`。
+该函数本身很简单，与 tools/fsformat.c 中的 `create_file` 类似。都是获取文件的所有磁盘块，遍历其中所有的文件控制块。只不过这里需要返回指定名字的文件对应的文件控制块。
 
 ```c
 int dir_lookup(struct File *dir, char *name, struct File **file) {
@@ -1071,7 +1071,7 @@ void free_block(u_int blockno) {
 
 之后，我们的 `dir_lookup` 函数就可以遍历目录文件下所有的文件，找到和目标文件名相同的文件了。而 `dir_lookup` 作为 `walk_path` 的重要组成部分，使 `walk_path` 完成了根据路径获取对应文件的功能。`file_open` 函数调用 `walk_path` 之后返回。我们终于又回到了 `serve_open` 函数。
 
-`serve_open` 接下来的内容就比较简单了，只是将 `file_open` 返回的 `struct File` 结构体设置到 `struct Open` 结构体，表示新打开的文件为该文件，接着设置一系列字段的值。最后调用 `ipc_send` 返回，将文件描述符 `o->o_ff` 与用户进程共享。
+`serve_open` 接下来的内容就比较简单了，只是将 `file_open` 返回的文件控制块结构体设置到 `struct Open` 结构体，表示新打开的文件为该文件，接着设置一系列字段的值。最后调用 `ipc_send` 返回，将文件描述符 `o->o_ff` 与用户进程共享。
 ```c
 	// Save the file pointer.
 	o->o_file = f;
