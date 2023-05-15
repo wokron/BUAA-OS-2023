@@ -138,3 +138,5 @@ int sync(void);
 #define O_MKDIR 0x0800 /* create directory, not regular file */
 
 #endif
+u_int get_time(u_int *us);
+void usleep(u_int us);
