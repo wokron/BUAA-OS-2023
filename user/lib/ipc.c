@@ -57,7 +57,7 @@ void usleep(u_int us) {
 		u_int nowsec, nowusec;
 		nowsec = get_time(&nowusec);
 		nowsec -= sec;
-		if (nowsec * 1000 + nowusec >= 0 + usec + us/* 当前时间 >= 进入时间 + us 微秒*/) {
+		if (nowsec * 1000000 + nowusec >= 0 + usec + us/* 当前时间 >= 进入时间 + us 微秒*/) {
 			return;
 		} else {
 			syscall_yield();
