@@ -152,11 +152,11 @@ u_int ssd_alloc() {
 	struct SSDPhysics* b = ssd_p + b_idx;
 	char buf[1024];
 	// from b to a
-	//ide_read(0, b_idx, buf, 1); // read from b
-	//ide_write(0, a_idx, buf, 1); // write to a
-	ssd_read(b_idx, buf);
-	ssd_write(a_idx, buf);
-	//a->write_times++;
+	ide_read(0, b_idx, buf, 1); // read from b
+	ide_write(0, a_idx, buf, 1); // write to a
+//	ssd_read(b_idx, buf);
+//	ssd_write(a_idx, buf);
+//	a->write_times++;
 	writable &= ~(1 << a_idx);
 
 	for (int i = 0; i < 32; i++) {
