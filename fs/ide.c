@@ -85,7 +85,6 @@ u_int writable;
 
 struct SSDPhysics {
 	u_int write_times;
-//	int is_writable;
 };
 
 struct SSDMap {
@@ -104,7 +103,6 @@ void ssd_init() {
 
 	for (int i = 0; i < 32; i++) {
 		ssd_p[i].write_times = 0;
-//		ssd_p[i].is_writable = 1;
 	}
 
 	writable = 0xffffffff;
@@ -161,7 +159,6 @@ u_int ssd_alloc() {
 	
 	a->write_times++;
 	writable &= ~(1 << a_idx);
-//	a->is_writable = 0;
 
 	for (int i = 0; i < 32; i++) {
 		if (ssd_map[i].p_no == b_idx) {
@@ -193,7 +190,6 @@ void ssd_write(u_int logic_no, void *src) {
 	ide_write(0, map->p_no, src, 1);
 	
 	writable &= ~(1 << map->p_no);
-//	ssd_p[map->p_no].is_writable = 0;
 }
 void ssd_erase(u_int logic_no) {
 	struct SSDMap* map = ssd_map + logic_no;
