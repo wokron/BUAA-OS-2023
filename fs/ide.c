@@ -153,7 +153,8 @@ u_int ssd_alloc() {
 	// from b to a
 	ide_read(0, b_idx, buf, 1); // read from b
 	ide_write(0, a_idx, buf, 1); // write to a
-
+	
+	a->write_times++;
 	a->is_writable = 0;
 
 	for (int i = 0; i < 32; i++) {
@@ -164,6 +165,7 @@ u_int ssd_alloc() {
 	}
 
 	ssd_erase_physical(b_idx);
+
 	
 	return b_idx;
 }
