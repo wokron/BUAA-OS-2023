@@ -81,6 +81,7 @@ void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs) {
 	}
 }
 
+// this is bitmap
 u_int writable;
 
 struct SSDPhysics {
@@ -120,11 +121,8 @@ int ssd_read(u_int logic_no, void *dst) {
 
 char zeros[1024] = {0};
 void ssd_erase_physical(u_int physical_no) {
-//	debugf("p_no:%d\n", physical_no);
 	ide_write(0, physical_no, zeros, 1);
-//	debugf("after ide_write\n");
 	ssd_p[physical_no].write_times++;
-//	ssd_p[physical_no].is_writable = 1;
 	writable |= (1 << physical_no);
 }
 
@@ -154,10 +152,11 @@ u_int ssd_alloc() {
 	struct SSDPhysics* b = ssd_p + b_idx;
 	char buf[1024];
 	// from b to a
-	ide_read(0, b_idx, buf, 1); // read from b
-	ide_write(0, a_idx, buf, 1); // write to a
-	
-	a->write_times++;
+	//ide_read(0, b_idx, buf, 1); // read from b
+	//ide_write(0, a_idx, buf, 1); // write to a
+	ssd_read(b_idx, buf);
+	ssd_write(a_idx, buf);
+	//a->write_times++;
 	writable &= ~(1 << a_idx);
 
 	for (int i = 0; i < 32; i++) {
@@ -179,6 +178,7 @@ void ssd_write(u_int logic_no, void *src) {
 	if (!map->is_empty) {
 		ssd_erase_physical(map->p_no);
 		map->is_empty = 1;
+		map->p_no = -1;
 	}
 
 	u_int new_p_no = ssd_alloc();
@@ -200,4 +200,5 @@ void ssd_erase(u_int logic_no) {
 
 	ssd_erase_physical(map->p_no);
 	map->is_empty = 1;
+	map->p_no = -1;
 }
