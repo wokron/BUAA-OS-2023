@@ -125,46 +125,47 @@ void ssd_erase_physical(u_int physical_no) {
 	ssd_p[physical_no].is_writable = 1;
 }
 
-u_int ssd_alloc(u_int logical_no) {
-	int idx = -1;
+u_int ssd_alloc() {
+	int a_idx = -1;
 	for (int i = 0; i < 32; i++) {
 		if (ssd_p[i].is_writable &&
-		(idx == -1 || ssd_p[i].write_times < ssd_p[idx].write_times)) {
-			idx = i;
+		(a_idx == -1 || ssd_p[i].write_times < ssd_p[a_idx].write_times)) {
+			a_idx = i;
 		}
 	}
 
-	struct SSDPhysics* a = ssd_p + idx;
+	struct SSDPhysics* a = ssd_p + a_idx;
 
 	if (a->write_times < 5) {
-		return a - ssd_p;
+		return a_idx;
 	}
 
-	int unwritable_idx = -1;
+	int b_idx = -1;
 	for (int i = 0; i < 32; i++) {
 		if (!ssd_p[i].is_writable &&
-		(idx == -1 || ssd_p[i].write_times < ssd_p[idx].write_times)) {
-			unwritable_idx = i;
+		(b_idx == -1 || ssd_p[i].write_times < ssd_p[b_idx].write_times)) {
+			b_idx = i;
 		}
 	}
 
-	struct SSDPhysics* b = ssd_p + unwritable_idx;
+	struct SSDPhysics* b = ssd_p + b_idx;
 	char buf[1024];
 	// from b to a
-	ide_read(0, unwritable_idx, buf, 1); // read from b
-	ide_write(0, idx, buf, 1); // write to a
+	ide_read(0, b_idx, buf, 1); // read from b
+	ide_write(0, a_idx, buf, 1); // write to a
 
 	a->is_writable = 0;
 
 	for (int i = 0; i < 32; i++) {
-		if (ssd_map[i].p_no == unwritable_idx) {
-			ssd_map[i].p_no = idx;
+		if (ssd_map[i].p_no == b_idx) {
+			ssd_map[i].p_no = a_idx;
+			break;
 		}
 	}
 
-	ssd_erase_physical(unwritable_idx);
+	ssd_erase_physical(b_idx);
 	
-	return b - ssd_p;
+	return b_idx;
 }
 
 void ssd_write(u_int logic_no, void *src) {
@@ -175,7 +176,7 @@ void ssd_write(u_int logic_no, void *src) {
 		map->is_empty = 1;
 	}
 
-	u_int new_p_no = ssd_alloc(logic_no);
+	u_int new_p_no = ssd_alloc();
 	
 	map->p_no = new_p_no;
 	
