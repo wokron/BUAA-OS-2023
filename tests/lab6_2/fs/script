@@ -1,0 +1,2 @@
+echo.b This is the end of the script
+ls.b | cat.b > aaa.txt
