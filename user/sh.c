@@ -88,8 +88,11 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			// Open 't' for reading, dup it onto fd 0, and then close the original fd.
 			/* Exercise 6.5: Your code here. (1/3) */
+			fd = open(t, O_RDONLY);
+			dup(fd, 0);
+			close(fd);
 
-			user_panic("< redirection not implemented");
+//			user_panic("< redirection not implemented");
 
 			break;
 		case '>':
@@ -99,8 +102,11 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			// Open 't' for writing, dup it onto fd 1, and then close the original fd.
 			/* Exercise 6.5: Your code here. (2/3) */
+			fd = open(t, O_WRONLY);
+			dup(fd, 1);
+			close(fd);
 
-			user_panic("> redirection not implemented");
+//			user_panic("> redirection not implemented");
 
 			break;
 		case '|':;
@@ -121,8 +127,21 @@ int parsecmd(char **argv, int *rightpipe) {
 			 */
 			int p[2];
 			/* Exercise 6.5: Your code here. (3/3) */
+			pipe(p);
+			*rightpipe = fork();
+			if (*rightpipe == 0) {
+				dup(p[0], 0);
+				close(p[0]);
+				close(p[1]);
+				return parsecmd(argv, rightpipe);
+			}  else if (*rightpipe > 0) {
+				dup(p[1], 1);
+				close(p[1]);
+				close(p[0]);
+				return argc;
+			}
 
-			user_panic("| not implemented");
+//			user_panic("| not implemented");
 
 			break;
 		}
