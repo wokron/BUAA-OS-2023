@@ -109,22 +109,17 @@ int spawn(char *prog, char **argv) {
 		return fd;
 	}
 
-	debugf("debuf: %s", prog);	
-	debugf("debug: enter spawn\n");
 	// Step 2: Read the ELF header (of type 'Elf32_Ehdr') from the file into 'elfbuf' using
 	// 'readn()'.
 	// If that fails (where 'readn' returns a different size than expected),
 	// set 'r' and 'goto err' to close the file and return the error.
 	int r;
 	u_char elfbuf[512];
-
-	debugf("debug: before readn\n");
+	
 	/* Exercise 6.4: Your code here. (1/6) */
-	seek(fd, 0);
 	if ((r = readn(fd, elfbuf, sizeof(Elf32_Ehdr))) < 0 || r != sizeof(Elf32_Ehdr)) {
 		goto err;
 	}
-	debugf("debug: after readn\n");
 
 	const Elf32_Ehdr *ehdr = elf_from(elfbuf, sizeof(Elf32_Ehdr));
 	if (!ehdr) {
@@ -133,7 +128,6 @@ int spawn(char *prog, char **argv) {
 	}
 	u_long entrypoint = ehdr->e_entry;
 	
-	debugf("debug: after elf_from\n");
 	// Step 3: Create a child using 'syscall_exofork()' and store its envid in 'child'.
 	// If the syscall fails, set 'r' and 'goto err'.
 	u_int child;
@@ -164,7 +158,7 @@ int spawn(char *prog, char **argv) {
 		// 'goto err1' on failure.
 		// You may want to use 'seek' and 'readn'.
 		/* Exercise 6.4: Your code here. (4/6) */
-		if ((r = seek(fd, ph_off)) < 0 || (r = readn(fd, elfbuf + ph_off, ehdr->e_phentsize)) < 0) {
+		if ((r = seek(fd, ph_off)) < 0 || (r = readn(fd, elfbuf, ehdr->e_phentsize)) < 0) {
 			goto err1;
 		}
 
