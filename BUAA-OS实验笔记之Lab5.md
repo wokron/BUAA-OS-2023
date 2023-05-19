@@ -1146,7 +1146,7 @@ int fd2num(struct Fd *fd) {
 #define INDEX2DATA(i) (FILEBASE + (i)*PDMAP)
 ```
 
-接着我们将文件所有的内容都从磁盘中映射到内存。使用的函数为 `fsipc_map`。映射的过程和得到文件描述符的过程类似，甚至更简单，就不详述了。
+接着我们将文件所有的内容都从磁盘中映射到内存。使用的函数为 `fsipc_map`。映射的过程和得到文件描述符的过程类似，就不详述了。
 ```c
 	ffd = (struct Filefd *)fd;
 	size = ffd->f_file.f_size;
@@ -1155,9 +1155,11 @@ int fd2num(struct Fd *fd) {
 	// Step 4: Alloc pages and map the file content using 'fsipc_map'.
 	for (int i = 0; i < size; i += BY2PG) {
 		/* Exercise 5.9: Your code here. (4/5) */
-		try(fsipc_map(fileid, i, va));
+		try(fsipc_map(fileid, i, va + i));
 	}
 ```
+
+> 注意这里要映射到的地址为 `va + i` 而非 `va`，使用后者时在 Lab6 中加载更大文件时会出现 bug，但却可以通过 Lab5 的评测……
 
 在最后，使用 `fd2num` 方法获取文件描述符在文件描述符 “数组” 中的索引
 ```c
