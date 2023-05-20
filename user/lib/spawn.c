@@ -136,9 +136,6 @@ int spawn(char *prog, char **argv) {
 	if (child < 0) {
 		r = child;
 		goto err;
-	} else if (child == 0) {
-		env = envs + ENVX(syscall_getenvid());
-		return 0;
 	}
 
 	// Step 4: Use 'init_stack(child, argv, &sp)' to initialize the stack of the child.
