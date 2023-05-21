@@ -65,7 +65,7 @@ int gettoken(char *s, char **p1) {
 
 #define MAXARGS 128
 
-int parsecmd(char **argv, int *rightpipe) {
+int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 	int argc = 0;
 	while (1) {
 		char *t;
@@ -133,7 +133,7 @@ int parsecmd(char **argv, int *rightpipe) {
 				dup(p[0], 0);
 				close(p[0]);
 				close(p[1]);
-				return parsecmd(argv, rightpipe);
+				return parsecmd(argv, rightpipe, leftenv);
 			}  else if (*rightpipe > 0) {
 				dup(p[1], 1);
 				close(p[1]);
@@ -144,6 +144,14 @@ int parsecmd(char **argv, int *rightpipe) {
 //			user_panic("| not implemented");
 
 			break;
+		case ';':
+			debugf("clg: use ;\n");
+			*leftenv = fork();
+			if (*leftenv == 0) {
+				return argc;
+			} else if (*leftenv > 0) {
+				return parsecmd(argv, rightpipe, leftenv);
+			}
 		}
 	}
 
@@ -155,11 +163,16 @@ void runcmd(char *s) {
 
 	char *argv[MAXARGS];
 	int rightpipe = 0;
-	int argc = parsecmd(argv, &rightpipe);
+	int leftenv = 0;
+	int argc = parsecmd(argv, &rightpipe, &leftenv);
 	if (argc == 0) {
 		return;
 	}
 	argv[argc] = 0;
+
+	if (leftenv) {
+		wait(leftenv);
+	}
 
 	int child = spawn(argv[0], argv);
 	close_all();
