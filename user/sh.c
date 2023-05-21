@@ -2,7 +2,7 @@
 #include <lib.h>
 
 #define WHITESPACE " \t\r\n"
-#define SYMBOLS "<|>&;()"
+#define SYMBOLS "<|>&;()\""
 
 /* Overview:
  *   Parse the next token from the string at s.
@@ -20,6 +20,7 @@
  *   returned token is a null-terminated string.
  */
 int _gettoken(char *s, char **p1, char **p2) {
+	static int in_quot = 0;
 	*p1 = 0;
 	*p2 = 0;
 	if (s == 0) {
@@ -30,10 +31,14 @@ int _gettoken(char *s, char **p1, char **p2) {
 		*s++ = 0;
 	}
 	if (*s == 0) {
+		in_quot = 0;
 		return 0;
 	}
 
 	if (strchr(SYMBOLS, *s)) {
+		if (*s == '\"') {
+			in_quot = !in_quot;
+		}
 		int t = *s;
 		*p1 = s;
 		*s++ = 0;
@@ -42,7 +47,7 @@ int _gettoken(char *s, char **p1, char **p2) {
 	}
 
 	*p1 = s;
-	while (*s && !strchr(WHITESPACE SYMBOLS, *s)) {
+	while (*s && ((in_quot && !strchr("\"", *s)) || !strchr(WHITESPACE SYMBOLS, *s))) {
 		s++;
 	}
 	*p2 = s;
@@ -162,6 +167,14 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 				return parsecmd(argv, rightpipe, leftenv);
 			}
 			break;
+		case '\"':
+			debugf("clg: use \"\n");
+			gettoken(0, &t);
+			argv[argc++] = t;
+			if (gettoken(0, &t) == 0) {
+				return argc;
+			}
+			break;
 		}
 	}
 
@@ -183,7 +196,8 @@ void runcmd(char *s) {
 	if (leftenv) {
 		wait(leftenv);
 	}
-
+	
+	debugf("clg: spawn %s...\n", argv[0]);
 	int child = spawn(argv[0], argv);
 	close_all();
 	if (child >= 0) {
@@ -197,29 +211,90 @@ void runcmd(char *s) {
 	exit();
 }
 
+int insert_char(char *buf, int i, char ch) {
+	int len = strlen(buf);
+	if (len >= MAXPATHLEN) {
+		return -1;
+	}
+	for (int j = len; j > i; j--) {
+		buf[j] = buf[j - 1];
+	}
+	buf[i] = ch;
+
+	len++;
+	for (int j = i + 1; j < len; j++) {
+		printf("%c", buf[j]);
+	}
+	for (int j = i + 1; j < len; j++) {
+		printf("\b");
+	}
+	
+	return 0;
+}
+
+void remove_char(char *buf, int i) {
+	if (i < 0) {
+		return;
+	}
+	for (int j = i; buf[j]; j++) {
+		buf[j] = buf[j + 1];
+	}
+
+	printf("\b");
+	for (int j = i; buf[j]; j++) {
+		printf("%c", buf[j]);
+	}
+	printf(" \b");
+	for (int j = i; buf[j]; j++) {
+		printf("\b");
+	}
+}
+
 void readline(char *buf, u_int n) {
+	memset(buf, 0, 1024);
 	int r;
-	for (int i = 0; i < n; i++) {
-		if ((r = read(0, buf + i, 1)) != 1) {
+	int cursor = 0;
+	int ch;
+	while (1) {	
+		if ((r = read(0, &ch, 1)) != 1) {
 			if (r < 0) {
 				debugf("read error: %d\n", r);
 			}
 			exit();
 		}
-		if (buf[i] == '\b' || buf[i] == 0x7f) {
-			if (i > 0) {
-				i -= 2;
-			} else {
-				i = -1;
+		if (ch == '\b' || ch == 0x7f) {
+			if (cursor > 0) {
+				remove_char(buf, cursor - 1);
+				cursor--;
 			}
-			if (buf[i] != '\b') {
-				printf("\b");
-			}
-		}
-		if (buf[i] == '\r' || buf[i] == '\n') {
-			buf[i] = 0;
+		} else if (ch == '\r' || ch == '\n') {
 			return;
+		} else if (ch == 0x1b) {
+			read(0, &ch, 1); // read [
+			read(0, &ch, 1);
+			if (ch == 'A')
+				debugf("clg: get up key\n");
+			else if (ch == 'B')
+				debugf("clg: get down key\n");
+			else if (ch == 'C') {
+				if (cursor < strlen(buf)) {
+					cursor++;
+				} else {
+					printf("\b");
+				}
+			}
+			else if (ch == 'D') {
+				if (cursor > 0) {
+					cursor--;
+				} else {
+					printf(" ");
+				}
+			}
+		} else {
+			insert_char(buf, cursor, ch);
+			cursor++;
 		}
+
 	}
 	debugf("line too long\n");
 	while ((r = read(0, buf, 1)) == 1 && buf[0] != '\r' && buf[0] != '\n') {
