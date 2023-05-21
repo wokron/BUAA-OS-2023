@@ -152,6 +152,16 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 			} else if (*leftenv > 0) {
 				return parsecmd(argv, rightpipe, leftenv);
 			}
+			break;
+		case '&':
+			debugf("clg: use &\n");
+			int child = fork();
+			if (child == 0) {
+				return argc;
+			} else if (child > 0) {
+				return parsecmd(argv, rightpipe, leftenv);
+			}
+			break;
 		}
 	}
 
