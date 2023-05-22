@@ -278,7 +278,8 @@ void write_symlink(struct File *dirf, const char *path) {
 	struct File *target = create_file(dirf);
 	// Your code here: 使用 readlink() 函数读取链接文件指向的路径，将其写入到下一个可用的磁盘块
 	char buf[MAXPATHLEN];
-	readlink(path, buf, MAXPATHLEN);
+	int len = readlink(path, buf, MAXPATHLEN);
+	buf[len] = '\0';
 	strcpy(disk[nextbno].data, buf);
 
 	const char *fname = strrchr(path, '/');
@@ -289,7 +290,7 @@ void write_symlink(struct File *dirf, const char *path) {
 	}
 	// Your code here: 设置链接文件的文件名、大小（指向路径的字符串的长度）、类型属性
 	strcpy(target->f_name, fname);
-	target->f_size = strlen(disk[nextbno].data);
+	target->f_size = strlen(buf);
 	target->f_type = FTYPE_LNK;
 
 	save_block_link(target, 0, next_block(BLOCK_DATA));
