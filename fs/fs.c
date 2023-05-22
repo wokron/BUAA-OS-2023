@@ -647,6 +647,72 @@ int walk_path(char *path, struct File **pdir, struct File **pfile, char *lastele
 	return 0;
 }
 
+
+int walk_path_at(struct File *par_dir, char *path, struct File **pdir, struct File **pfile, char *lastelem) {
+	char *p;
+	char name[MAXNAMELEN];
+	struct File *dir, *file;
+	int r;
+
+	// start at the root.
+	path = skip_slash(path);
+//	file = &super->s_root;
+	file = par_dir;
+
+	dir = 0;
+	name[0] = 0;
+
+	if (pdir) {
+		*pdir = 0;
+	}
+
+	*pfile = 0;
+
+	// find the target file by name recursively.
+	while (*path != '\0') {
+		dir = file;
+		p = path;
+
+		while (*path != '/' && *path != '\0') {
+			path++;
+		}
+
+		if (path - p >= MAXNAMELEN) {
+			return -E_BAD_PATH;
+		}
+
+		memcpy(name, p, path - p);
+		name[path - p] = '\0';
+		path = skip_slash(path);
+		if (dir->f_type != FTYPE_DIR) {
+			return -E_NOT_FOUND;
+		}
+
+		if ((r = dir_lookup(dir, name, &file)) < 0) {
+			if (r == -E_NOT_FOUND && *path == '\0') {
+				if (pdir) {
+					*pdir = dir;
+				}
+
+				if (lastelem) {
+					strcpy(lastelem, name);
+				}
+
+				*pfile = 0;
+			}
+
+			return r;
+		}
+	}
+
+	if (pdir) {
+		*pdir = dir;
+	}
+
+	*pfile = file;
+	return 0;
+}
+
 // Overview:
 //  Open "path".
 //
@@ -655,6 +721,10 @@ int walk_path(char *path, struct File **pdir, struct File **pfile, char *lastele
 //  On error return < 0.
 int file_open(char *path, struct File **file) {
 	return walk_path(path, 0, file, 0);
+}
+
+int file_openat(struct File *dir, char *path, struct File **file) {
+	return walk_path_at(dir, path, 0, file, 0);
 }
 
 // Overview:

@@ -75,7 +75,7 @@ int fd_lookup(int fdnum, struct Fd **fd) {
 		*fd = (struct Fd *)va;
 		return 0;
 	}
-
+	
 	return -E_INVAL;
 }
 
@@ -173,7 +173,11 @@ int read(int fdnum, void *buf, u_int n) {
 	struct Dev *dev;
 	struct Fd *fd;
 	/* Exercise 5.10: Your code here. (1/4) */
-	if ((r = fd_lookup(fdnum, &fd)) < 0 || (r = dev_lookup(fd->fd_dev_id, &dev)) < 0) {
+	if ((r = fd_lookup(fdnum, &fd)) < 0) {
+		return r;
+	}
+
+	if ((r = dev_lookup(fd->fd_dev_id, &dev)) < 0) {
 		return r;
 	}
 
