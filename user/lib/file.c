@@ -60,6 +60,7 @@ int open(const char *path, int mode) {
 		char buf[MAXPATHLEN];
 		int len = read(fid, buf, MAXPATHLEN);
 		buf[len] = '\0';
+		close(fid);
 		return open(buf, mode);
 	}
 
