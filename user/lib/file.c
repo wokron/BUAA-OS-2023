@@ -69,6 +69,7 @@ int openat(int dirfd, const char *path, int mode) {
 	u_int fileid = dir_ffd->f_fileid;
 	
 	struct Fd *fd;
+	try(fd_alloc(&fd));
 	fsipc_openat(fileid, path, mode, fd);
 
 	char *va;
@@ -144,7 +145,6 @@ static int file_read(struct Fd *fd, void *buf, u_int n, u_int offset) {
 
 	// Avoid reading past the end of file.
 	size = f->f_file.f_size;
-	debugf("debug: size in read %d\n", size);
 	if (offset > size) {
 		return 0;
 	}
