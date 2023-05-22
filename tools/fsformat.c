@@ -277,7 +277,9 @@ void write_file(struct File *dirf, const char *path) {
 void write_symlink(struct File *dirf, const char *path) {
 	struct File *target = create_file(dirf);
 	// Your code here: 使用 readlink() 函数读取链接文件指向的路径，将其写入到下一个可用的磁盘块
-	readlink(path, disk[nextbno].data, sizeof(disk[0].data));
+	char buf[MAXPATHLEN];
+	readlink(path, buf, MAXPATHLEN);
+	strcpy(disk[nextbno].data, buf);
 
 	const char *fname = strrchr(path, '/');
 	if (fname) {
@@ -344,7 +346,7 @@ int main(int argc, char **argv) {
 	for (int i = 2; i < argc; i++) {
 		char *name = argv[i];
 		struct stat stat_buf;
-		int r = stat(name, &stat_buf);
+		int r = lstat(name, &stat_buf);
 		assert(r == 0);
 		if (S_ISDIR(stat_buf.st_mode)) {
 			printf("writing directory '%s' recursively into disk\n", name);
@@ -353,7 +355,6 @@ int main(int argc, char **argv) {
 			printf("writing regular file '%s' into disk\n", name);
 			write_file(&super.s_root, name);
 		} else if (S_ISLNK(stat_buf.st_mode)) {
-			printf("writing link file %s to disk\n", name);
 			write_symlink(&super.s_root, name);
 		} else {
 			fprintf(stderr, "'%s' has illegal file mode %o\n", name, stat_buf.st_mode);
