@@ -55,6 +55,14 @@ int open(const char *path, int mode) {
 		try(fsipc_map(fileid, i, va + i));
 	}
 
+	if (ffd->f_file.f_type == FTYPE_LNK) {
+		int fid = fd2num(fd);
+		char buf[1024];
+		read(fid, buf, 1024);
+		return open(buf, mode);
+	}
+
+
 	// Step 5: Return the number of file descriptor using 'fd2num'.
 	/* Exercise 5.9: Your code here. (5/5) */
 	return fd2num(fd);
