@@ -57,8 +57,9 @@ int open(const char *path, int mode) {
 
 	if (ffd->f_file.f_type == FTYPE_LNK) {
 		int fid = fd2num(fd);
-		char buf[1024];
-		read(fid, buf, 1024);
+		char buf[MAXPATHLEN];
+		int len = read(fid, buf, MAXPATHLEN);
+		buf[len] = '\0';
 		return open(buf, mode);
 	}
 
