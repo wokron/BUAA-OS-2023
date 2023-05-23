@@ -96,9 +96,6 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 			fd = open(t, O_RDONLY);
 			dup(fd, 0);
 			close(fd);
-
-//			user_panic("< redirection not implemented");
-
 			break;
 		case '>':
 			if (gettoken(0, &t) != 'w') {
@@ -110,9 +107,6 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 			fd = open(t, O_WRONLY | O_CREAT);
 			dup(fd, 1);
 			close(fd);
-
-//			user_panic("> redirection not implemented");
-
 			break;
 		case '|':;
 			/*
@@ -145,9 +139,6 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 				close(p[0]);
 				return argc;
 			}
-
-//			user_panic("| not implemented");
-
 			break;
 		case ';':
 			debugf("clg: use ;\n");
@@ -210,9 +201,106 @@ void runcmd(char *s) {
 	exit();
 }
 
+int simple_readline(int fd, char *buf, int n) {
+	int i = 0;
+	while (readn(fd, buf + i, 1) == 1) {
+		if (i >= n)
+			return n;
+		if (buf[i] == '\n')
+			break;
+		i++;
+	}
+	buf[i] = '\0';
+	return i;
+}
+
+int history_num;
+int history_now;
+char unfinished_cmd[1024];
+
+void init_history() {
+	int fd;
+
+	if ((fd = open("/.history", O_CREAT | O_RDONLY)) < 0) {
+		user_panic("open .history, %d", fd);
+	}
+
+	history_num = 0;
+	while (simple_readline(fd, unfinished_cmd, 1024) > 0) {
+		history_num++;
+	}
+
+	history_now = history_num;
+
+	close(fd);
+}
+
+void savecmd(char *s) {
+	int fd;
+
+	if ((fd = open("/.history", O_CREAT | O_WRONLY)) < 0) {
+		user_panic("open .history, %d", fd);
+	}
+
+	struct Stat stat_buf;
+	fstat(fd, &stat_buf);
+
+	seek(fd, stat_buf.st_size);
+
+	int len = strlen(s);
+	s[len] = '\n';
+
+	write(fd, s, len + 1);
+	
+	s[len] = '\0';
+
+	history_num++;
+	history_now = history_num;
+	
+	close(fd);
+}
+
+void loadcmd_from_buf(int *p_cursor, char *dst, char *from) {
+	int buf_len = strlen(dst);
+	int cursor = *p_cursor;
+
+//	for (int i = 0; i < cursor; i++)
+//		printf("\b");
+	for (int i = 0; i < buf_len; i++)
+		printf(" ");
+	for (int i = 0; i < buf_len; i++)
+		printf("\b");
+
+//	debugf("clg: cursor:%d\n", cursor);
+//	debugf("clg: buf_len:%d\n", buf_len);
+
+	memset(dst, 0, 1024);
+	strcpy(dst, from);
+
+	printf("%s", dst);
+	*p_cursor = strlen(dst);
+}
+
+void loadcmd(int *p_cursor, char *buf, int no) {
+	int fd;
+
+	if ((fd = open("/.history", O_CREAT | O_RDONLY)) < 0) {
+		user_panic("open .history, %d", fd);
+	}
+	
+	char tmp[1024];
+	for (int i = 0; i <= no; i++) {
+		simple_readline(fd, tmp, 1024);
+	}
+	
+	loadcmd_from_buf(p_cursor, buf, tmp);
+
+	close(fd);
+}
+
 int insert_char(char *buf, int i, char ch) {
 	int len = strlen(buf);
-	if (len >= MAXPATHLEN) {
+	if (len + i >= 1024) {
 		return -1;
 	}
 	for (int j = len; j > i; j--) {
@@ -250,10 +338,12 @@ void remove_char(char *buf, int i) {
 }
 
 void readline(char *buf, u_int n) {
-	memset(buf, 0, 1024);
 	int r;
 	int cursor = 0;
 	int ch;
+
+	memset(buf, 0, 1024);
+	
 	while (1) {	
 		if ((r = read(0, &ch, 1)) != 1) {
 			if (r < 0) {
@@ -271,30 +361,46 @@ void readline(char *buf, u_int n) {
 		} else if (ch == 0x1b) {
 			read(0, &ch, 1); // read [
 			read(0, &ch, 1);
-			if (ch == 'A')
-				debugf("clg: get up key\n");
-			else if (ch == 'B')
-				debugf("clg: get down key\n");
-			else if (ch == 'C') {
+			if (ch == 'A') { // up
+				printf("\n$ ");
+				if (history_now == history_num) {
+					strcpy(unfinished_cmd, buf);
+				}
+				history_now = history_now > 0 ? history_now - 1 : 0;
+				loadcmd(&cursor, buf, history_now);
+			} else if (ch == 'B') { // down
+				printf("\r$ ");
+				history_now = history_now < history_num ? history_now + 1 : history_num;
+				if (history_now == history_num) {
+					loadcmd_from_buf(&cursor, buf, unfinished_cmd);
+				} else {
+					loadcmd(&cursor, buf, history_now);
+				}
+			} else if (ch == 'C') { // right
 				if (cursor < strlen(buf)) {
 					cursor++;
 				} else {
 					printf("\b");
 				}
 			}
-			else if (ch == 'D') {
+			else if (ch == 'D') { // left
 				if (cursor > 0) {
 					cursor--;
 				} else {
 					printf(" ");
 				}
 			}
-		} else {
-			insert_char(buf, cursor, ch);
+		} else {	
+			if (insert_char(buf, cursor, ch) < 0) {
+				goto err;
+			}
 			cursor++;
 		}
-
 	}
+
+	return;
+
+err:
 	debugf("line too long\n");
 	while ((r = read(0, buf, 1)) == 1 && buf[0] != '\r' && buf[0] != '\n') {
 		;
@@ -340,15 +446,22 @@ int main(int argc, char **argv) {
 		}
 		user_assert(r == 0);
 	}
+
+	init_history();
+
 	for (;;) {
 		if (interactive) {
 			printf("\n$ ");
 		}
 		readline(buf, sizeof buf);
 
+		if (buf[0] != '\0') {
+			savecmd(buf);
+		}
+
 		if (buf[0] == '#') {
 			continue;
-		}
+		}		
 		if (echocmds) {
 			printf("# %s\n", buf);
 		}
