@@ -107,7 +107,7 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 			}
 			// Open 't' for writing, dup it onto fd 1, and then close the original fd.
 			/* Exercise 6.5: Your code here. (2/3) */
-			fd = open(t, O_WRONLY);
+			fd = open(t, O_WRONLY | O_CREAT);
 			dup(fd, 1);
 			close(fd);
 
@@ -197,7 +197,6 @@ void runcmd(char *s) {
 		wait(leftenv);
 	}
 	
-	debugf("clg: spawn %s...\n", argv[0]);
 	int child = spawn(argv[0], argv);
 	close_all();
 	if (child >= 0) {

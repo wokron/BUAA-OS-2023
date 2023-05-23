@@ -60,6 +60,17 @@ int open(const char *path, int mode) {
 	return fd2num(fd);
 }
 
+int mkdir(const char *path) {
+	int r;
+
+	if ((r = open(path, O_MKDIR)) < 0) {
+		return r;
+	}
+	close(r);
+
+	return 0;
+}
+
 // Overview:
 //  Close a file descriptor
 int file_close(struct Fd *fd) {

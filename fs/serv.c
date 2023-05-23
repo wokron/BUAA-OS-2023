@@ -97,9 +97,23 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 	}
 
 	// Open the file.
-	if ((r = file_open(rq->req_path, &f)) < 0) {
-		ipc_send(envid, r, 0, 0);
+	r = file_open(rq->req_path, &f);
+
+	if (r >= 0 && f->f_type != FTYPE_DIR && (rq->req_omode & O_MKDIR)) {
+		ipc_send(envid, -E_INVAL, 0, 0);
 		return;
+	}
+
+	if (r < 0) {
+		if (!((rq->req_omode & O_CREAT) || (rq->req_omode & O_MKDIR))
+		|| (r = file_create(rq->req_path, &f)) < 0) {
+			ipc_send(envid, r, 0, 0);
+			return;
+		}
+	}
+
+	if (rq->req_omode & O_MKDIR) {
+		f->f_type = FTYPE_DIR;
 	}
 
 	// Save the file pointer.
