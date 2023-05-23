@@ -22,6 +22,10 @@ void dfs_walk_path(char *path, int level) {
 	struct File f, f_next;
 	struct File files[256];
 	int file_num = 0;
+
+	if (flag['L'] > 0 && level > flag['L']) {
+		return;
+	}
 	
 	has_next[level] = 1;
 
@@ -35,6 +39,13 @@ void dfs_walk_path(char *path, int level) {
 		}
 	}
 	
+	if (n > 0) {
+		user_panic("short read in directory %s", path);
+	}
+	if (n < 0) {
+		user_panic("error reading directory %s: %d", path, n);
+	}
+
 	int len = strlen(path);
 	path[len++] = '/';
 
@@ -52,13 +63,15 @@ void dfs_walk_path(char *path, int level) {
 	}
 
 	close(fd);
-//	if (n > 0) {
-//		user_panic("short read in directory %s", path);
-//	}
-//	if (n < 0) {
-//		user_panic("error reading directory %s: %d", path, n);
-//	}
+}
 
+int atoi(char *a) {
+	int num = 0;
+	for (int i = 0; a[i]; i++) {
+		num *= 10;
+		num += a[i] - '0';
+	}
+	return num;
 }
 
 int main(int argc, char *argv[]) {
@@ -68,7 +81,7 @@ int main(int argc, char *argv[]) {
 	default:
 		usage();
 	case 'L':
-		flag[(u_char)ARGC()]++;
+		flag[(u_char)ARGC()] = atoi(ARGF());
 		break;
 	}
 	ARGEND	
@@ -79,7 +92,21 @@ int main(int argc, char *argv[]) {
 	
 	char path_buf[MAXPATHLEN];
 	strcpy(path_buf, argv[0]);
+	
+	char *name = path_buf;
+	for (int i = 0; path_buf[i]; i++) {
+		if (path_buf[i] == '/')
+			name = path_buf + i;
+	}
 
+	struct Stat stat_buf;
+	stat(path_buf, &stat_buf);
+
+	if (!stat_buf.st_isdir) {
+		user_panic("%s is not directory", path_buf);
+	}
+
+	printf("%s\n", name);
 	dfs_walk_path(path_buf, 1);
 
 	return 0;
