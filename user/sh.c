@@ -201,7 +201,7 @@ void runcmd(char *s) {
 	exit();
 }
 
-int simple_readline(int fd, char *buf, int n) {
+int readline(int fd, char *buf, int n) {
 	int i = 0;
 	while (readn(fd, buf + i, 1) == 1) {
 		if (i >= n)
@@ -214,9 +214,9 @@ int simple_readline(int fd, char *buf, int n) {
 	return i;
 }
 
-int history_num;
-int history_now;
-char unfinished_cmd[1024];
+int hsty_num;
+int hsty_now;
+char cmdbuf[1024];
 
 void init_history() {
 	int fd;
@@ -225,12 +225,13 @@ void init_history() {
 		user_panic("open .history, %d", fd);
 	}
 
-	history_num = 0;
-	while (simple_readline(fd, unfinished_cmd, 1024) > 0) {
-		history_num++;
+	char tmp[1024];
+	hsty_num = 0;
+	while (readline(fd, tmp, 1024) > 0) {
+		hsty_num++;
 	}
 
-	history_now = history_num;
+	hsty_now = hsty_num;
 
 	close(fd);
 }
@@ -254,8 +255,8 @@ void savecmd(char *s) {
 	
 	s[len] = '\0';
 
-	history_num++;
-	history_now = history_num;
+	hsty_num++;
+	hsty_now = hsty_num;
 	
 	close(fd);
 }
@@ -264,15 +265,10 @@ void loadcmd_from_buf(int *p_cursor, char *dst, char *from) {
 	int buf_len = strlen(dst);
 	int cursor = *p_cursor;
 
-//	for (int i = 0; i < cursor; i++)
-//		printf("\b");
 	for (int i = 0; i < buf_len; i++)
 		printf(" ");
 	for (int i = 0; i < buf_len; i++)
 		printf("\b");
-
-//	debugf("clg: cursor:%d\n", cursor);
-//	debugf("clg: buf_len:%d\n", buf_len);
 
 	memset(dst, 0, 1024);
 	strcpy(dst, from);
@@ -290,7 +286,7 @@ void loadcmd(int *p_cursor, char *buf, int no) {
 	
 	char tmp[1024];
 	for (int i = 0; i <= no; i++) {
-		simple_readline(fd, tmp, 1024);
+		readline(fd, tmp, 1024);
 	}
 	
 	loadcmd_from_buf(p_cursor, buf, tmp);
@@ -337,7 +333,7 @@ void remove_char(char *buf, int i) {
 	}
 }
 
-void readline(char *buf, u_int n) {
+void readcmd(char *buf) {
 	int r;
 	int cursor = 0;
 	int ch;
@@ -363,18 +359,18 @@ void readline(char *buf, u_int n) {
 			read(0, &ch, 1);
 			if (ch == 'A') { // up
 				printf("\n$ ");
-				if (history_now == history_num) {
-					strcpy(unfinished_cmd, buf);
+				if (hsty_now == hsty_num) {
+					strcpy(cmdbuf, buf);
 				}
-				history_now = history_now > 0 ? history_now - 1 : 0;
-				loadcmd(&cursor, buf, history_now);
+				hsty_now = hsty_now > 0 ? hsty_now - 1 : 0;
+				loadcmd(&cursor, buf, hsty_now);
 			} else if (ch == 'B') { // down
 				printf("\r$ ");
-				history_now = history_now < history_num ? history_now + 1 : history_num;
-				if (history_now == history_num) {
-					loadcmd_from_buf(&cursor, buf, unfinished_cmd);
+				hsty_now = hsty_now < hsty_num ? hsty_now + 1 : hsty_num;
+				if (hsty_now == hsty_num) {
+					loadcmd_from_buf(&cursor, buf, cmdbuf);
 				} else {
-					loadcmd(&cursor, buf, history_now);
+					loadcmd(&cursor, buf, hsty_now);
 				}
 			} else if (ch == 'C') { // right
 				if (cursor < strlen(buf)) {
@@ -397,7 +393,6 @@ void readline(char *buf, u_int n) {
 			cursor++;
 		}
 	}
-
 	return;
 
 err:
@@ -453,7 +448,7 @@ int main(int argc, char **argv) {
 		if (interactive) {
 			printf("\n$ ");
 		}
-		readline(buf, sizeof buf);
+		readcmd(buf);
 
 		if (buf[0] != '\0') {
 			savecmd(buf);
