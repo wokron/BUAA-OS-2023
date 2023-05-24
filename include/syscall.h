@@ -22,6 +22,7 @@ enum {
 	SYS_cgetc,
 	SYS_write_dev,
 	SYS_read_dev,
+	SYS_set_env_relative_path,
 	MAX_SYSNO,
 };
 

@@ -181,6 +181,11 @@ void runcmd(char *s) {
 	int argc = parsecmd(argv, &rightpipe, &leftenv);
 	if (argc == 0) {
 		return;
+	} else if (strcmp(argv[0], "cd") == 0) {
+		if (chdir(argc > 1 ? argv[1] : "/") < 0) {
+			printf("path %s not exists\n", argv[1]);
+		}
+		return;
 	}
 	argv[argc] = 0;
 
@@ -333,6 +338,8 @@ void remove_char(char *buf, int i) {
 	}
 }
 
+char cwd_buf[MAXPATHLEN];
+
 void readcmd(char *buf) {
 	int r;
 	int cursor = 0;
@@ -358,14 +365,14 @@ void readcmd(char *buf) {
 			read(0, &ch, 1); // read [
 			read(0, &ch, 1);
 			if (ch == 'A') { // up
-				printf("\n$ ");
+				printf("\n%s $ ", getcwd(cwd_buf));
 				if (hsty_now == hsty_num) {
 					strcpy(cmdbuf, buf);
 				}
 				hsty_now = hsty_now > 0 ? hsty_now - 1 : 0;
 				loadcmd(&cursor, buf, hsty_now);
 			} else if (ch == 'B') { // down
-				printf("\r$ ");
+				printf("\r%s $ ", getcwd(cwd_buf));
 				hsty_now = hsty_now < hsty_num ? hsty_now + 1 : hsty_num;
 				if (hsty_now == hsty_num) {
 					loadcmd_from_buf(&cursor, buf, cmdbuf);
@@ -446,7 +453,7 @@ int main(int argc, char **argv) {
 
 	for (;;) {
 		if (interactive) {
-			printf("\n$ ");
+			printf("\n%s $ ", getcwd(cwd_buf));
 		}
 		readcmd(buf);
 

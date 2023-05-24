@@ -36,8 +36,10 @@ int open(const char *path, int mode) {
 
 	// Step 2: Prepare the 'fd' using 'fsipc_open' in fsipc.c.
 	/* Exercise 5.9: Your code here. (2/5) */
-	try(fsipc_open(path, mode, fd));
-
+	char abspath[MAXPATHLEN];
+	r2abs(abspath, path);
+	try(fsipc_open(abspath, mode, fd));
+	
 	// Step 3: Set 'va' to the address of the page where the 'fd''s data is cached, using
 	// 'fd2data'. Set 'size' and 'fileid' correctly with the value in 'fd' as a 'Filefd'.
 	char *va;
@@ -69,6 +71,34 @@ int mkdir(const char *path) {
 	close(r);
 
 	return 0;
+}
+
+int chdir(const char *path) {
+	char abspath[MAXPATHLEN];
+	r2abs(abspath, path);
+	
+	struct Stat stat_buf;
+	if (stat(abspath, &stat_buf) < 0 || !stat_buf.st_isdir) {
+		return -1;
+	}
+
+	syscall_set_env_relative_path(0, abspath);
+	return 0;
+}
+
+char *getcwd(char *buf) {
+	strcpy(buf, env->env_rpath);
+	return buf;
+}
+
+void r2abs(char *buf, const char *path) {
+	if (path && path[0] != '/') {
+		getcwd(buf);
+		int len = strlen(buf);
+		strcpy(buf + len, path);
+	} else {
+		strcpy(buf, path);	
+	}
 }
 
 // Overview:

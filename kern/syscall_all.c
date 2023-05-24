@@ -265,6 +265,7 @@ int sys_exofork(void) {
 	/* Exercise 4.9: Your code here. (4/4) */
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
+	strcpy(e->env_rpath, curenv->env_rpath);
 	
 	return e->env_id;
 }
@@ -518,6 +519,16 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return -E_INVAL;
 }
 
+int sys_set_env_relative_path(int envid, const char *path) {
+	struct Env *env;
+
+	try(envid2env(envid, &env, 1));
+
+	strcpy(env->env_rpath, path);
+
+	return 0;
+}
+
 void *syscall_table[MAX_SYSNO] = {
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
@@ -537,6 +548,7 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_cgetc] = sys_cgetc,
     [SYS_write_dev] = sys_write_dev,
     [SYS_read_dev] = sys_read_dev,
+    [SYS_set_env_relative_path] = sys_set_env_relative_path,
 };
 
 /* Overview:

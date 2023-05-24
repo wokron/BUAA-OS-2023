@@ -74,3 +74,7 @@ int syscall_read_dev(void *va, u_int dev, u_int len) {
 	/* Exercise 5.2: Your code here. (2/2) */
 	return msyscall(SYS_read_dev, va, dev, len);
 }
+
+int syscall_set_env_relative_path(u_int envid, const char *path) {
+	return msyscall(SYS_set_env_relative_path, envid, path);
+}
