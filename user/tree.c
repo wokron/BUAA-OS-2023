@@ -13,13 +13,13 @@ void print_file(char *name, int level) {
 	for (int i = 1; i < level; i++) {
 		printf("%c    ", has_next[i] ? '|' : ' ');
 	}
-		printf("|--- ");
+		printf("%c--- ", has_next[level] ? '|' : '+');
 	printf("%s\n", name);
 }
 
 void dfs_walk_path(char *path, int level) {
 	int fd, n;
-	struct File f, f_next;
+	struct File f;
 	struct File files[256];
 	int file_num = 0;
 
