@@ -622,6 +622,16 @@ int walk_path(char *path, struct File **pdir, struct File **pfile, char *lastele
 			return -E_NOT_FOUND;
 		}
 
+		if (strcmp(name, ".") == 0) {
+			file = dir;
+			continue;
+		}
+
+		if (strcmp(name, "..") == 0) {
+			file = dir->f_dir;
+			continue;
+		}
+
 		if ((r = dir_lookup(dir, name, &file)) < 0) {
 			if (r == -E_NOT_FOUND && *path == '\0') {
 				if (pdir) {
