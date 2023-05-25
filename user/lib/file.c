@@ -68,6 +68,7 @@ int mkdir(const char *path) {
 	if ((r = open(path, O_MKDIR)) < 0) {
 		return r;
 	}
+	debugf("clg: before close\n");
 	close(r);
 
 	return 0;
@@ -96,22 +97,57 @@ char *getcwd(char *buf) {
 }
 
 void r2abs(char *buf, const char *path) {
+	char tmp[MAXPATHLEN];
 	if (path && path[0] != '/') {
-		getcwd(buf);
-		int len = strlen(buf);
-		buf[len++] = '/';
-		strcpy(buf + len, path);
+		getcwd(tmp);
+		int len = strlen(tmp);
+		tmp[len++] = '/';
+		strcpy(tmp + len, path);
 	} else {
-		strcpy(buf, path);	
+		strcpy(tmp, path);	
 	}
-	int i, j;
-	for (i = 0, j = 0; buf[i]; i++) {
-		if (buf[i] == '/' && j > 0 && buf[j - 1] == '/') {
-			continue;
+
+	char *pbuf, *p, *q;
+	char name[MAXNAMELEN];
+	buf[0] = '/';
+	q = buf + 1;
+	pbuf = p = tmp + 1;
+	while (*pbuf != '\0') {
+		p = pbuf;
+
+		while (*pbuf != '/' && *pbuf != '\0') {
+			pbuf++;
 		}
-		buf[j++] = buf[i];
+
+		memcpy(name, p, pbuf - p);
+		name[pbuf - p] = '\0';
+		while (*pbuf == '/') {
+			pbuf++;
+		}
+		
+		if (name[0] == '\0') {
+			continue;
+		} else if (strcmp(name, ".") == 0) {
+			continue;
+		} else if (strcmp(name, "..") == 0) {
+			q = (q == buf + 1 ? q : q - 2);
+			while (*q != '/') {
+				q--;
+			}
+			q++;
+		} else {
+			strcpy(q, name);
+			q += strlen(name);
+			*q = '/';
+			q++;
+		}
 	}
-	buf[j] = '\0';
+	
+	if (q > buf + 1) {
+		*(q - 1) = '\0';
+	} else {
+		*q = '\0';
+	}
 }
 
 // Overview:
@@ -137,7 +173,7 @@ int file_close(struct Fd *fd) {
 
 	// Request the file server to close the file with fsipc.
 	if ((r = fsipc_close(fileid)) < 0) {
-		debugf("cannot close the file\n");
+		debugf("cannot close the file, %d\n", r);
 		return r;
 	}
 
