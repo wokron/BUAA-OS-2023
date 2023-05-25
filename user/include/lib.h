@@ -117,6 +117,7 @@ int stat(const char *path, struct Stat *);
 int open(const char *path, int mode);
 int mkdir(const char *path);
 void r2abs(char *buf, const char *rpath);
+int envchdir(u_int envid, const char *path);
 int chdir(const char *path);
 char *getcwd(char *buf);
 int read_map(int fd, u_int offset, void **blk);

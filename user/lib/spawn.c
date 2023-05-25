@@ -104,15 +104,22 @@ static int spawn_mapper(void *data, u_long va, size_t offset, u_int perm, const 
 int spawn(char *prog, char **argv) {
 	// Step 1: Open the file 'prog' (the path of the program).
 	// Return the error if 'open' fails.
-	int fd;
-	fd = open(prog, O_RDONLY);
-	if (fd < 0) {
-		char tmp[MAXPATHLEN];
-		strcpy(tmp, prog);
+	char tmp[MAXPATHLEN];
+	strcpy(tmp, prog);
+	if (tmp[0] != '.') {
 		int len = strlen(tmp);
-		tmp[len] = '.';
-		tmp[len+1] = 'b';
-		tmp[len+2] = 0;
+		tmp[len + 1] = '\0';
+		for (int i = len; i > 0; i--)
+			tmp[i] = tmp[i - 1];
+		tmp[0] = '/';
+	}
+
+	int fd;
+	fd = open(tmp, O_RDONLY);
+	
+	if (fd < 0) {
+		int len = strlen(tmp);
+		strcpy(tmp + len, ".b");
 		fd = open(tmp, O_RDONLY);
 	}
 	if (fd < 0) {

@@ -522,9 +522,13 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 int sys_set_env_relative_path(int envid, const char *path) {
 	struct Env *env;
 
-	try(envid2env(envid, &env, 1));
-
+	try(envid2env(envid, &env, 0));
+	
+	printk("before:%s\n", env->env_rpath);
+	memset(env->env_rpath, 0, sizeof(env->env_rpath));
 	strcpy(env->env_rpath, path);
+
+	printk("after:%s\n", env->env_rpath);
 
 	return 0;
 }

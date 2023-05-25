@@ -182,7 +182,7 @@ void runcmd(char *s) {
 	if (argc == 0) {
 		return;
 	} else if (strcmp(argv[0], "cd") == 0) {
-		if (chdir(argc > 1 ? argv[1] : "/") < 0) {
+		if (envchdir(env->env_parent_id, argc > 1 ? argv[1] : "/") < 0) {
 			printf("path %s not exists\n", argv[1]);
 		}
 		return;

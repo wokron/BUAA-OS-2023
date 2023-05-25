@@ -73,7 +73,7 @@ int mkdir(const char *path) {
 	return 0;
 }
 
-int chdir(const char *path) {
+int envchdir(u_int envid, const char *path) {
 	char abspath[MAXPATHLEN];
 	r2abs(abspath, path);
 	
@@ -82,8 +82,12 @@ int chdir(const char *path) {
 		return -1;
 	}
 
-	syscall_set_env_relative_path(0, abspath);
+	try(syscall_set_env_relative_path(envid, abspath));
 	return 0;
+}
+
+int chdir(const char *path) {
+	return envchdir(0, path);
 }
 
 char *getcwd(char *buf) {
@@ -95,10 +99,19 @@ void r2abs(char *buf, const char *path) {
 	if (path && path[0] != '/') {
 		getcwd(buf);
 		int len = strlen(buf);
+		buf[len++] = '/';
 		strcpy(buf + len, path);
 	} else {
 		strcpy(buf, path);	
 	}
+	int i, j;
+	for (i = 0, j = 0; buf[i]; i++) {
+		if (buf[i] == '/' && j > 0 && buf[j - 1] == '/') {
+			continue;
+		}
+		buf[j++] = buf[i];
+	}
+	buf[j] = '\0';
 }
 
 // Overview:

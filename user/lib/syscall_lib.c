@@ -76,5 +76,6 @@ int syscall_read_dev(void *va, u_int dev, u_int len) {
 }
 
 int syscall_set_env_relative_path(u_int envid, const char *path) {
+	debugf("clg: enter syscall\n");
 	return msyscall(SYS_set_env_relative_path, envid, path);
 }
