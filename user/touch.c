@@ -1,17 +1,21 @@
 #include <lib.h>
 
 void usage(void) {
-	printf("touch [file]\n");
+	printf("usage: touch file...\n");
 	exit();
 }
 
 int main(int argc, char *argv[]) {
-	if (argc != 2) {
+	int fd;
+	if (argc < 2) {
 		usage();
 	}
 	
-	int fd = open(argv[1], O_CREAT);
-	close(fd);
+	for (int i = 1; i < argc; i++) {
+		if ((fd = open(argv[i], O_CREAT)) >= 0) {
+			close(fd);
+		}
+	}
 	
 	return 0;
 }

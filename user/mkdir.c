@@ -1,7 +1,7 @@
 #include <lib.h>
 
 void usage(void) {
-	printf("usage: mkdir [dir...]\n");
+	printf("usage: mkdir dir...\n");
 	exit();
 }
 
