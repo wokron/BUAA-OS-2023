@@ -73,55 +73,24 @@ int mkdir(const char *path) {
 	return 0;
 }
 
-int envchdir(u_int envid, const char *path) {
-	char abspath[MAXPATHLEN];
-	r2abs(abspath, path);
-	
-	struct Stat stat_buf;
-	if (stat(abspath, &stat_buf) < 0 || !stat_buf.st_isdir) {
-		return -1;
-	}
-
-	try(syscall_set_env_relative_path(envid, abspath));
-	return 0;
-}
-
-int chdir(const char *path) {
-	return envchdir(0, path);
-}
-
-char *getcwd(char *buf) {
-	strcpy(buf, env->env_rpath);
-	return buf;
-}
-
-void r2abs(char *buf, const char *path) {
-	char tmp[MAXPATHLEN];
-	if (path && path[0] != '/') {
-		getcwd(tmp);
-		int len = strlen(tmp);
-		tmp[len++] = '/';
-		strcpy(tmp + len, path);
-	} else {
-		strcpy(tmp, path);	
-	}
-
-	char *pbuf, *p, *q;
+char *format_abspath(char *buf, char *path) {
+	char *rt = path;
+	char *p, *q;
 	char name[MAXNAMELEN];
 	buf[0] = '/';
 	q = buf + 1;
-	pbuf = p = tmp + 1;
-	while (*pbuf != '\0') {
-		p = pbuf;
+	path++;
+	while (*path != '\0') {
+		p = path;
 
-		while (*pbuf != '/' && *pbuf != '\0') {
-			pbuf++;
+		while (*path != '/' && *path != '\0') {
+			path++;
 		}
 
-		memcpy(name, p, pbuf - p);
-		name[pbuf - p] = '\0';
-		while (*pbuf == '/') {
-			pbuf++;
+		memcpy(name, p, path - p);
+		name[path - p] = '\0';
+		while (*path == '/') {
+			path++;
 		}
 		
 		if (name[0] == '\0') {
@@ -146,6 +115,44 @@ void r2abs(char *buf, const char *path) {
 		*(q - 1) = '\0';
 	} else {
 		*q = '\0';
+	}
+
+	return rt;
+}
+
+int envchdir(u_int envid, const char *path) {
+	char abspath[MAXPATHLEN];
+	r2abs(abspath, path);
+	
+	struct Stat stat_buf;
+	if (stat(abspath, &stat_buf) < 0 || !stat_buf.st_isdir) {
+		return -1;
+	}
+
+	char formatedpath[MAXPATHLEN];
+	format_abspath(formatedpath, abspath);
+	try(syscall_set_env_relative_path(envid, formatedpath));
+	return 0;
+}
+
+int chdir(const char *path) {
+	return envchdir(0, path);
+}
+
+char *getcwd(char *buf) {
+	strcpy(buf, env->env_curpath);
+	return buf;
+}
+
+void r2abs(char *abspath, const char *path) {
+	char tmp[MAXPATHLEN];
+	if (path && path[0] != '/') {
+		getcwd(abspath);
+		int len = strlen(abspath);
+		abspath[len++] = '/';
+		strcpy(abspath + len, path);
+	} else {
+		strcpy(abspath, path);	
 	}
 }
 
