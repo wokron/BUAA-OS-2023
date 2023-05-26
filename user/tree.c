@@ -11,7 +11,7 @@ void usage(void) {
 
 void print_file(char *name, int level, int isdir) {
 	for (int i = 1; i < level; i++) {
-		printf("%c    ", has_next[i] ? '|' : ' ');
+		printf("%c   ", has_next[i] ? '|' : ' ');
 	}
 	printf("%c-- ", has_next[level] ? '|' : '`');
 
