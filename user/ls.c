@@ -42,6 +42,10 @@ void lsdir(char *path, char *prefix) {
 void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 	char *sep;
 	
+	if (flag['l']) {
+		printf("%11d %c ", size, isdir ? 'd' : '-');
+	}
+
 	char *tmp;
 	if (isdir) {
 		printf("\e[34m");
@@ -49,9 +53,6 @@ void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 		printf("\e[32m");
 	}
 
-	if (flag['l']) {
-		printf("%11d %c ", size, isdir ? 'd' : '-');
-	}
 	if (prefix) {
 		if (prefix[0] && prefix[strlen(prefix) - 1] != '/') {
 			sep = "/";
