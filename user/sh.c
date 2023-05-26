@@ -141,7 +141,6 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 			}
 			break;
 		case ';':
-			debugf("clg: use ;\n");
 			*leftenv = fork();
 			if (*leftenv == 0) {
 				return argc;
@@ -150,16 +149,14 @@ int parsecmd(char **argv, int *rightpipe, int *leftenv) {
 			}
 			break;
 		case '&':
-			debugf("clg: use &\n");
-			int child = fork();
-			if (child == 0) {
+			r = fork();
+			if (r == 0) {
 				return argc;
-			} else if (child > 0) {
+			} else if (r > 0) {
 				return parsecmd(argv, rightpipe, leftenv);
 			}
 			break;
 		case '\"':
-			debugf("clg: use \"\n");
 			gettoken(0, &t);
 			argv[argc++] = t;
 			if (gettoken(0, &t) == 0) {

@@ -68,7 +68,6 @@ int mkdir(const char *path) {
 	if ((r = open(path, O_MKDIR)) < 0) {
 		return r;
 	}
-	debugf("clg: before close\n");
 	close(r);
 
 	return 0;
