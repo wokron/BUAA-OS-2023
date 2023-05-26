@@ -351,24 +351,32 @@ void readcmd(char *buf) {
 			}
 			exit();
 		}
-		if (ch == '\b' || ch == 0x7f) {
+
+		switch (ch) {
+		case '\b':
+		case 0x7f:	
 			if (cursor > 0) {
 				remove_char(buf, cursor - 1);
 				cursor--;
 			}
-		} else if (ch == '\r' || ch == '\n') {
+			break;
+		case '\r':
+		case '\n':
 			return;
-		} else if (ch == 0x1b) {
+			break;
+		case 0x1b: // read \e
 			read(0, &ch, 1); // read [
-			read(0, &ch, 1);
-			if (ch == 'A') { // up
+			read(0, &ch, 1); // read A B C D for arrow keys
+			switch(ch) {
+			case 'A':	
 				printf("\n\e[34m%s\e[0m $ ", getcwd(cwd_buf));
 				if (hsty_now == hsty_num) {
 					strcpy(cmdbuf, buf);
 				}
 				hsty_now = hsty_now > 0 ? hsty_now - 1 : 0;
 				loadcmd(&cursor, buf, hsty_now);
-			} else if (ch == 'B') { // down
+				break;
+			case 'B':
 				printf("\r\e[34m%s\e[0m $ ", getcwd(cwd_buf));
 				hsty_now = hsty_now < hsty_num ? hsty_now + 1 : hsty_num;
 				if (hsty_now == hsty_num) {
@@ -376,25 +384,31 @@ void readcmd(char *buf) {
 				} else {
 					loadcmd(&cursor, buf, hsty_now);
 				}
-			} else if (ch == 'C') { // right
+				break;
+			case 'C':
 				if (cursor < strlen(buf)) {
 					cursor++;
 				} else {
 					printf("\b");
 				}
-			}
-			else if (ch == 'D') { // left
+				break;
+			case 'D':
 				if (cursor > 0) {
 					cursor--;
 				} else {
 					printf(" ");
 				}
+				break;
+			default:
+				break;
 			}
-		} else {	
+			break;
+		default:
 			if (insert_char(buf, cursor, ch) < 0) {
 				goto err;
 			}
 			cursor++;
+			break;
 		}
 	}
 	return;
