@@ -362,14 +362,14 @@ void readcmd(char *buf) {
 			read(0, &ch, 1); // read [
 			read(0, &ch, 1);
 			if (ch == 'A') { // up
-				printf("\n%s $ ", getcwd(cwd_buf));
+				printf("\n\e[34m%s\e[0m $ ", getcwd(cwd_buf));
 				if (hsty_now == hsty_num) {
 					strcpy(cmdbuf, buf);
 				}
 				hsty_now = hsty_now > 0 ? hsty_now - 1 : 0;
 				loadcmd(&cursor, buf, hsty_now);
 			} else if (ch == 'B') { // down
-				printf("\r%s $ ", getcwd(cwd_buf));
+				printf("\r\e[34m%s\e[0m $ ", getcwd(cwd_buf));
 				hsty_now = hsty_now < hsty_num ? hsty_now + 1 : hsty_num;
 				if (hsty_now == hsty_num) {
 					loadcmd_from_buf(&cursor, buf, cmdbuf);
@@ -450,7 +450,7 @@ int main(int argc, char **argv) {
 
 	for (;;) {
 		if (interactive) {
-			printf("\n%s $ ", getcwd(cwd_buf));
+			printf("\e[34m%s\e[0m $ ", getcwd(cwd_buf));
 		}
 		readcmd(buf);
 

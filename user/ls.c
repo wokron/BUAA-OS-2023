@@ -41,6 +41,10 @@ void lsdir(char *path, char *prefix) {
 
 void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 	char *sep;
+	
+	if (isdir) {
+		printf("\e[34m");
+	}
 
 	if (flag['l']) {
 		printf("%11d %c ", size, isdir ? 'd' : '-');
@@ -57,7 +61,9 @@ void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 	if (flag['F'] && isdir) {
 		printf("/");
 	}
-	printf(" ");
+	printf("%c", flag['l'] ? '\n' : ' ');
+
+	printf("\e[0m");
 }
 
 void usage(void) {
@@ -84,7 +90,7 @@ int main(int argc, char **argv) {
 		ls(getcwd(buf), "");
 	} else {
 		for (i = 0; i < argc; i++) {
-			ls(argv[i], argv[i]);
+			ls(argv[i], "");
 		}
 	}
 	printf("\n");

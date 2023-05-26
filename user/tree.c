@@ -9,12 +9,12 @@ void usage(void) {
 	exit();
 }
 
-void print_file(char *name, int level) {
+void print_file(char *name, int level, int isdir) {
 	for (int i = 1; i < level; i++) {
 		printf("%c    ", has_next[i] ? '|' : ' ');
 	}
 		printf("%c--- ", has_next[level] ? '|' : '+');
-	printf("%s\n", name);
+	printf("%s%s\e[0m\n", (isdir ? "\e[34m" : ""), name);
 }
 
 void dfs_walk_path(char *path, int level) {
@@ -54,7 +54,7 @@ void dfs_walk_path(char *path, int level) {
 		if (i == file_num - 1) {
 			has_next[level] = 0;
 		}
-		print_file(f.f_name, level);
+		print_file(f.f_name, level, f.f_type == FTYPE_DIR);
 		if (f.f_type == FTYPE_DIR) {
 			strcpy(path + len, f.f_name);
 			dfs_walk_path(path, level + 1);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 		user_panic("%s is not directory", path_buf);
 	}
 
-	printf("%s\n", name);
+	printf("\e[34m%s\e[0m\n", name);
 	dfs_walk_path(path_buf, 1);
 
 	return 0;
