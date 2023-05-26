@@ -13,7 +13,7 @@
 #define MAXNAMELEN 128
 
 // Maximum size of a complete pathname, including null
-#define MAXPATHLEN 1024
+#define MAXPATHLEN 512
 
 // Number of (direct) block pointers in a File descriptor
 #define NDIRECT 10
