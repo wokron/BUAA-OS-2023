@@ -13,8 +13,15 @@ void print_file(char *name, int level, int isdir) {
 	for (int i = 1; i < level; i++) {
 		printf("%c    ", has_next[i] ? '|' : ' ');
 	}
-		printf("%c--- ", has_next[level] ? '|' : '+');
-	printf("%s%s\e[0m\n", (isdir ? "\e[34m" : ""), name);
+	printf("%c--- ", has_next[level] ? '|' : '+');
+
+	char *tmp;
+	if (isdir) {
+		printf("\e[34m");
+	} else if ((tmp = strchr(name, '.')) != NULL && strcmp(tmp, ".b") == 0) {
+		printf("\e[32m");
+	}
+	printf("%s\e[0m\n", name);
 }
 
 void dfs_walk_path(char *path, int level) {

@@ -78,7 +78,7 @@ int sys_env_destroy(u_int envid) {
 	struct Env *e;
 	try(envid2env(envid, &e, 1));
 
-	printk("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
+	// printk("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
 	env_destroy(e);
 	return 0;
 }
@@ -524,11 +524,8 @@ int sys_set_env_relative_path(int envid, const char *path) {
 
 	try(envid2env(envid, &env, 0));
 	
-	printk("before:%s\n", env->env_rpath);
 	memset(env->env_rpath, 0, sizeof(env->env_rpath));
 	strcpy(env->env_rpath, path);
-
-	printk("after:%s\n", env->env_rpath);
 
 	return 0;
 }

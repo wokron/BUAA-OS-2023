@@ -391,7 +391,7 @@ void env_free(struct Env *e) {
 	u_int pdeno, pteno, pa;
 
 	/* Hint: Note the environment's demise.*/
-	printk("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+	// printk("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 
 	/* Hint: Flush all mapped pages in the user portion of the address space */
 	for (pdeno = 0; pdeno < PDX(UTOP); pdeno++) {
@@ -437,7 +437,7 @@ void env_destroy(struct Env *e) {
 	/* Hint: schedule to run a new environment. */
 	if (curenv == e) {
 		curenv = NULL;
-		printk("i am killed ... \n");
+		// printk("i am killed ... \n");
 		schedule(1);
 	}
 }

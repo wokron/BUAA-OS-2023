@@ -42,8 +42,11 @@ void lsdir(char *path, char *prefix) {
 void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 	char *sep;
 	
+	char *tmp;
 	if (isdir) {
 		printf("\e[34m");
+	} else if ((tmp = strchr(name, '.')) != NULL && strcmp(tmp, ".b") == 0) {
+		printf("\e[32m");
 	}
 
 	if (flag['l']) {
