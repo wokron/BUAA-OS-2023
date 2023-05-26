@@ -265,7 +265,7 @@ int sys_exofork(void) {
 	/* Exercise 4.9: Your code here. (4/4) */
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
-	strcpy(e->env_rpath, curenv->env_rpath);
+	strcpy(e->env_curpath, curenv->env_curpath);
 	
 	return e->env_id;
 }
@@ -524,8 +524,8 @@ int sys_set_env_relative_path(int envid, const char *path) {
 
 	try(envid2env(envid, &env, 0));
 	
-	memset(env->env_rpath, 0, sizeof(env->env_rpath));
-	strcpy(env->env_rpath, path);
+	memset(env->env_curpath, 0, sizeof(env->env_curpath));
+	strcpy(env->env_curpath, path);
 
 	return 0;
 }

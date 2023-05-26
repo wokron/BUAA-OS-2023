@@ -272,7 +272,7 @@ int env_alloc(struct Env **new, u_int parent_id) {
 	if ((r = asid_alloc(&e->env_asid)) != 0) {
 		return r;
 	}
-	strcpy(e->env_rpath, "/");
+	strcpy(e->env_curpath, "/");
 
 	/* Step 4: Initialize the sp and 'cp0_status' in 'e->env_tf'. */
 	// Timer interrupt (STATUS_IM4) will be enabled.
