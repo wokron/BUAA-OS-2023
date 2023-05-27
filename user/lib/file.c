@@ -344,8 +344,11 @@ int remove(const char *path) {
 	// Your code here.
 	// Call fsipc_remove.
 
+	char abspath[MAXPATHLEN];
+	r2abs(abspath, path);
+
 	/* Exercise 5.13: Your code here. */
-	return fsipc_remove(path);
+	return fsipc_remove(abspath);
 }
 
 // Overview:

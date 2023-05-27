@@ -46,7 +46,8 @@ ifeq ($(call lab-ge,6), true)
 			touch.b \
 			tree.b \
 			history.b \
-			pwd.b
+			pwd.b \
+			rm.b
 endif
 
 USERLIB := $(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)
