@@ -44,7 +44,7 @@ void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 	char *sep;
 	
 	if (flag['l']) {
-		printf("%11d %c ", size, isdir ? 'd' : '-');
+		printf("%-11d %c ", size, isdir ? 'd' : '-');
 	}
 
 	char *tmp;
@@ -70,7 +70,7 @@ void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 
 	printf("\e[0m");
 
-	if (num % 5 == 0) {
+	if (!flag['l'] && num % 5 == 0) {
 		printf("\n");
 	}
 	num++;
