@@ -340,7 +340,7 @@ char cwd_buf[MAXPATHLEN];
 void readcmd(char *buf) {
 	int r;
 	int cursor = 0;
-	int ch;
+	char ch;
 
 	memset(buf, 0, 1024);
 	
