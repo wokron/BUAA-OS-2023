@@ -628,7 +628,9 @@ int walk_path(char *path, struct File **pdir, struct File **pfile, char *lastele
 		}
 
 		if (strcmp(name, "..") == 0) {
-			file = dir->f_dir;
+			if (strcmp(file->f_name, "/") != 0) {
+				file = dir->f_dir;
+			}
 			continue;
 		}
 
