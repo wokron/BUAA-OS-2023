@@ -7,7 +7,7 @@ USERLIB     := $(addprefix $(user_dir)/, $(USERLIB))
 USERAPPS    := $(addprefix $(user_dir)/, $(USERAPPS))
 
 FSLIB       := fs.o ide.o
-FSIMGFILES  := rootfs/motd rootfs/newmotd $(USERAPPS) $(fs-files)
+FSIMGFILES  := rootfs/motd rootfs/newmotd rootfs/script rootfs/open_test $(USERAPPS) $(fs-files)
 
 .PRECIOUS: %.b %.b.c
 %.x: %.b.c

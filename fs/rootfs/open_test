@@ -1,0 +1,28 @@
+echo "start open_test"
+
+> test.txt
+echo 123 > test.txt
+echo "expect: 123"
+cat test.txt
+
+touch test2.txt
+echo "expect test2.txt exists"
+ls
+
+mkdir d1
+mkdir d2
+mkdir d1/d3
+cd d1
+echo "expect d1 exists"
+ls
+
+mkdir d4
+mkdir ../d5
+> f1.txt
+
+cd d4
+
+mkdir d5
+
+echo open_test finish
+tree /
