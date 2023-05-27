@@ -1,6 +1,7 @@
 #include <lib.h>
 
 int flag[256];
+int num = 1;
 
 void lsdir(char *, char *);
 void ls1(char *, u_int, u_int, char *);
@@ -61,13 +62,18 @@ void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 		}
 		printf("%s%s", prefix, sep);
 	}
-	printf("%s", name);
+	printf("%-16s", name);
 	if (flag['F'] && isdir) {
 		printf("/");
 	}
 	printf("%c", flag['l'] ? '\n' : ' ');
 
 	printf("\e[0m");
+
+	if (num % 5 == 0) {
+		printf("\n");
+	}
+	num++;
 }
 
 void usage(void) {
