@@ -176,6 +176,10 @@ void runcmd(char *s) {
 	int rightpipe = 0;
 	int leftenv = 0;
 	int argc = parsecmd(argv, &rightpipe, &leftenv);
+	if (leftenv) {
+		wait(leftenv);
+	}
+
 	if (argc == 0) {
 		return;
 	} else if (strcmp(argv[0], "cd") == 0) {
@@ -185,10 +189,6 @@ void runcmd(char *s) {
 		return;
 	}
 	argv[argc] = 0;
-
-	if (leftenv) {
-		wait(leftenv);
-	}
 	
 	int child = spawn(argv[0], argv);
 	close_all();
